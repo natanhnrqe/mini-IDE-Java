@@ -1,11 +1,16 @@
 package ide.java.ui;
 
+import ide.java.editor.Document;
+
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 public class EditorPanel extends JPanel {
 
     private JTextArea textArea;
+    private Document document;
 
     public EditorPanel() {
 
@@ -20,6 +25,42 @@ public class EditorPanel extends JPanel {
 
         add(scrollPane, BorderLayout.CENTER);
 
+        setupDocumentListener();
+
+    }
+
+    public void setDocument(Document document){
+        this.document = document;
+        textArea.setText(document.getContent());
+    }
+
+    public Document getDocument(){
+        return document;
+    }
+
+    private void setupDocumentListener(){
+        textArea.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateDocument();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateDocument();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateDocument();
+            }
+        });
+    }
+
+    private void updateDocument(){
+        if (document != null){
+            document.setContent(textArea.getText());
+        }
     }
 
     public JTextArea getTextArea() {
