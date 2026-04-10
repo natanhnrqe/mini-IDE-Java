@@ -97,6 +97,8 @@ public class MainWindow extends JFrame {
 
         consolePanel.print("File Saved: " + file.getName());
     }
+
+    //Save file for new docs
     private void saveFileAs(){
         Document doc = editorPanel.getDocument();
 
@@ -121,6 +123,7 @@ public class MainWindow extends JFrame {
             setTitle("Mine-IDE" + file.getName());
 
             consolePanel.print("File Saved As" + file.getName());
+
         }
     }
 }
