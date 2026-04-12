@@ -2,6 +2,7 @@ package ide.java.ui;
 
 import ide.java.editor.Document;
 import ide.java.filesystem.FileManager;
+import ide.java.run.RunManager;
 
 import javax.print.Doc;
 import javax.swing.*;
@@ -13,6 +14,7 @@ public class MainWindow extends JFrame {
     private JTabbedPane tabbedPane;
     private ConsolePanel consolePanel;
     private FileManager fileManager;
+    private RunManager runManager;
 
     public MainWindow(){
 
@@ -25,6 +27,8 @@ public class MainWindow extends JFrame {
         consolePanel = new ConsolePanel();
 
         fileManager = new FileManager();
+
+        runManager = new RunManager();
 
         JSplitPane splitPane = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
@@ -43,6 +47,13 @@ public class MainWindow extends JFrame {
 
     private void createMenu(){
         JMenuBar menuBar = new JMenuBar();
+
+        JMenu runMenu = new JMenu("Run");
+        JMenuItem runItem = new JMenuItem("Run");
+        runItem.addActionListener(e -> runCode());
+
+        runMenu.add(runItem);
+        menuBar.add(runMenu);
 
         JMenu fileMenu = new JMenu("File");
 
@@ -66,6 +77,31 @@ public class MainWindow extends JFrame {
         menuBar.add(fileMenu);
 
         setJMenuBar(menuBar);
+    }
+
+    private void runCode(){
+        EditorPanel editor = getCurrentEditor();
+
+        if (editor == null) return;
+
+        Document doc = editor.getDocument();
+
+        if (doc == null) return;
+
+        if (doc.getFile() == null){
+            saveFileAs();
+            doc = editor.getDocument();
+        }
+
+        if (doc.getModified()){
+            saveFile();
+        }
+        consolePanel.print("Running...\n");
+
+        String output = runManager.runJavaFile(doc.getFile());
+
+        consolePanel.print(output);
+
     }
 
     private void openFile(){
