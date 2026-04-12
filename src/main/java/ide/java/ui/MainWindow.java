@@ -15,6 +15,7 @@ public class MainWindow extends JFrame {
     private ConsolePanel consolePanel;
     private FileManager fileManager;
     private RunManager runManager;
+    private FileExplorerPanel explorerPanel;
 
     public MainWindow(){
 
@@ -30,15 +31,23 @@ public class MainWindow extends JFrame {
 
         runManager = new RunManager();
 
-        JSplitPane splitPane = new JSplitPane(
+        explorerPanel = new FileExplorerPanel(new File("."));
+
+        JSplitPane horizontalSplit = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                explorerPanel,
+                tabbedPane
+        );
+
+        JSplitPane verticalSplit = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
-                tabbedPane,
+                horizontalSplit,
                 consolePanel
         );
 
-        splitPane.setDividerLocation(450);
+        verticalSplit.setDividerLocation(450);
 
-        add(splitPane, BorderLayout.CENTER);
+        add(verticalSplit, BorderLayout.CENTER);
 
         createMenu();
 

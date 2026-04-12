@@ -20,6 +20,7 @@ public class FileExplorerPanel extends JPanel {
         jTree = new JTree(treeModel);
 
         JScrollPane scrollPane = new JScrollPane(jTree);
+        scrollPane.setBackground(Color.DARK_GRAY);
 
         add(scrollPane, BorderLayout.CENTER);
     }
