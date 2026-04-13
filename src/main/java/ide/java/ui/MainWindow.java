@@ -33,6 +33,12 @@ public class MainWindow extends JFrame {
 
         explorerPanel = new FileExplorerPanel(new File("."));
 
+        explorerPanel.setFileOpenCallBack(file -> {
+            String content = fileManager.openFile(file);
+            Document doc = new Document(file, content);
+            addNewTab(doc, file.getName());
+        });
+
         JSplitPane horizontalSplit = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,
                 explorerPanel,
@@ -60,6 +66,8 @@ public class MainWindow extends JFrame {
         JMenu runMenu = new JMenu("Run");
         JMenuItem runItem = new JMenuItem("Run");
         runItem.addActionListener(e -> runCode());
+
+
 
         runMenu.add(runItem);
         menuBar.add(runMenu);
