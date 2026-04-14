@@ -75,4 +75,10 @@ public class FileExplorerPanel extends JPanel {
     public void setFileOpenCallBack(Consumer<File> fileOpenCallBack) {
         this.fileOpenCallBack = fileOpenCallBack;
     }
+
+    public void setRootDirectory(File rootDirectory){
+        DefaultMutableTreeNode rootNode = createNode(rootDirectory);
+        treeModel.setRoot(rootNode);
+        treeModel.reload();
+    }
 }

@@ -88,6 +88,10 @@ public class MainWindow extends JFrame {
         JMenuItem closeItem = new JMenuItem("Close");
         closeItem.addActionListener(e -> closeCurrentTab());
 
+        JMenuItem openFolder = new JMenuItem("Open Folder");
+        openFolder.addActionListener(e -> openFolder());
+        fileMenu.add(openFolder);
+
         fileMenu.add(closeItem);
 
         fileMenu.add(openItem);
@@ -257,5 +261,21 @@ public class MainWindow extends JFrame {
             if (opt == JOptionPane.YES_OPTION) saveFile();
         }
         tabbedPane.remove(editor);
+    }
+
+    private void openFolder(){
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        int result = chooser.showOpenDialog(this);
+
+        if (result == JFileChooser.APPROVE_OPTION){
+            File folder = chooser.getSelectedFile();
+
+            explorerPanel.setRootDirectory(folder);
+
+            consolePanel.print("Opened Folder: " + folder.getAbsolutePath());
+        }
     }
 }
