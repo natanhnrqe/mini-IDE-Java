@@ -16,10 +16,14 @@ public class FileTreeCellRender extends DefaultTreeCellRenderer {
     private Icon javaIcon;
 
     public FileTreeCellRender() {
-        folderIcon = UIManager.getIcon("FileView.directoryIcon");
-        fileIcon = UIManager.getIcon("FileView.fileIcon");
+        folderIcon = new ImageIcon(getClass().getResource("/icons/pasta.png"));
+        fileIcon = new ImageIcon(getClass().getResource("/icons/arquivo.png"));
 
-        javaIcon = fileIcon;
+        javaIcon = new ImageIcon(getClass().getResource("/icons/javaico.png"));
+
+        folderIcon = loadIcon("/icons/pasta.png", 18);
+        fileIcon   = loadIcon("/icons/arquivo.png", 18);
+        javaIcon   = loadIcon("/icons/javaico.png", 18);
 
     }
     @Override
@@ -35,6 +39,9 @@ public class FileTreeCellRender extends DefaultTreeCellRenderer {
         super.getTreeCellRendererComponent(
                 jTree, value, selected, expanded, leaf, row, hasFocus
         );
+
+        setIconTextGap(6);
+        setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
 
@@ -55,5 +62,14 @@ public class FileTreeCellRender extends DefaultTreeCellRenderer {
         }
 
     return this;
+    }
+
+    private Icon loadIcon(String path, int size) {
+        ImageIcon icon = new ImageIcon(getClass().getResource(path));
+        Image image = icon.getImage();
+
+        Image scaled = image.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+
+        return new ImageIcon(scaled);
     }
 }
