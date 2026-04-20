@@ -23,6 +23,8 @@ import javax.swing.JTree;
  */
 public class FileExplorerPanel extends JPanel {
 
+    private JPopupMenu popupMenu;
+
     private JTree jTree;
     private DefaultTreeModel treeModel;
 
@@ -72,6 +74,27 @@ public class FileExplorerPanel extends JPanel {
                 }
             }
         });
+
+        jTree.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)){
+
+                    int row = jTree.getClosestRowForLocation(e.getX(), e.getY());
+                    jTree.setSelectionRow(row);
+
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) jTree.getLastSelectedPathComponent();
+
+                    if (node == null) return;
+
+                    File file = (File) node.getUserObject();
+
+                    createPopMenu(file);
+
+                    popupMenu.show(jTree, e.getX(), e.getY());
+                }
+            }
+        });
     }
 
     /**
@@ -100,8 +123,42 @@ public class FileExplorerPanel extends JPanel {
         return node;
     }
 
-    public JTree getjTree() {
-        return jTree;
+    private void createPopMenu(File file){
+        popupMenu = new JPopupMenu();
+
+        if (file.isFile()){
+
+            JMenuItem openItem = new JMenuItem("Open");
+            openItem.addActionListener(e -> {
+                if (fileOpenCallBack != null){
+                    fileOpenCallBack.accept(file);
+                }
+            });
+
+            popupMenu.add(openItem);
+        }
+
+        if (file.isDirectory()){
+
+            JMenuItem newFile = new JMenuItem("New File");
+            newFile.addActionListener(e -> createNewFile(file));
+
+            JMenuItem newFolder = new JMenuItem("New Folder");
+            newFolder.addActionListener(e -> createNewFolder(file));
+
+            popupMenu.add(newFile);
+            popupMenu.add(newFolder);
+        }
+
+        JMenuItem rename = new JMenuItem("Rename");
+        rename.addActionListener(e -> renameFile(file));
+
+        JMenuItem delete = new JMenuItem("Delete");
+        delete.addActionListener(e -> deleteFile(file));
+
+        popupMenu.addSeparator();
+        popupMenu.add(rename);
+        popupMenu.add(delete);
     }
 
     /**
@@ -131,5 +188,68 @@ public class FileExplorerPanel extends JPanel {
         if (currentRoot != null){
             setRootDirectory(currentRoot);
         }
+    }
+
+    private void createNewFile(File directory){
+        String name = JOptionPane.showInputDialog("File name:");
+
+        if (name == null || name.isBlank()) return;
+
+        try {
+            File newFile = new File(directory, name);
+            if (newFile.createNewFile()) {
+                refresh();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void createNewFolder(File directory){
+        String name = JOptionPane.showInputDialog("Folder name:");
+
+        if (name == null || name.isBlank()) return;
+
+        File folder = new File(directory, name);
+        if (folder.mkdir()){
+            refresh();
+        }
+    }
+
+    private void renameFile(File file){
+        String name = JOptionPane.showInputDialog("New name:", file.getName());
+
+        if (name == null || name.isBlank()) return;
+
+        File newfile = new File(file.getParent(), name);
+
+        if (file.renameTo(newfile)){
+            refresh();
+        }
+    }
+
+    private void deleteRecursively(File file){
+        if (file.isDirectory()){
+            File[] files = file.listFiles();
+            if (file != null){
+                for (File f : files){
+                    deleteRecursively(f);
+                }
+            }
+        }
+        file.delete();
+    }
+
+    private void deleteFile(File file){
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Delete " + file.getName() + "?",
+                "Confirm",
+                JOptionPane.YES_NO_OPTION
+        );
+        if (confirm != JOptionPane.YES_NO_OPTION) return;
+
+        deleteRecursively(file);
+        refresh();
     }
 }
