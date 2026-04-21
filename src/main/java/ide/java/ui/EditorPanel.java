@@ -34,6 +34,8 @@ public class EditorPanel extends JPanel {
     // Callback usado para notificar as mudancas
     private Runnable onChangeCallback;
 
+    private boolean isUpdating = false;
+
     public EditorPanel() {
         setLayout(new BorderLayout());
 
@@ -44,17 +46,19 @@ public class EditorPanel extends JPanel {
         add(new JScrollPane(textPane), BorderLayout.CENTER);
 
         keywordStyle = doc.addStyle("Keyword", null);
-        StyleConstants.setForeground(keywordStyle, Color.BLUE);
+        StyleConstants.setForeground(keywordStyle, new Color(204, 120, 50));
         StyleConstants.setBold(keywordStyle, true);
 
         normalStyle = doc.addStyle("Normal", null);
-        StyleConstants.setForeground(normalStyle, Color.WHITE);
+        StyleConstants.setForeground(normalStyle, new Color(169, 183, 198));
 
         stringStyle = doc.addStyle("String", null);
-        StyleConstants.setForeground(normalStyle, new Color(0, 200, 0));
+        StyleConstants.setForeground(normalStyle, new Color(106, 135, ));
 
         commentStyle = doc.addStyle("Comment", null);
         StyleConstants.setForeground(commentStyle, Color.GRAY);
+
+        applyDarkTheme();
 
         // Listener que detecta QUALQUER mudanca no texto
         setupDocumentListener();
@@ -79,10 +83,20 @@ public class EditorPanel extends JPanel {
             }
 
             private void update(){
-                SwingUtilities.invokeLater(() -> {
-                    highlight();
-                    updateDocument();
-                });
+               if (isUpdating) return;
+
+               SwingUtilities.invokeLater(() -> {
+                   if (isUpdating) return;
+
+                   isUpdating = true;
+
+                   try {
+                       highlight();
+                       updateDocument();
+                   } finally {
+                       isUpdating = false;
+                   }
+               });
             }
         });
     }
@@ -154,6 +168,13 @@ public class EditorPanel extends JPanel {
         highlightComments(text);
     }
 
+    private void applyDarkTheme(){
+        textPane.setBackground(new Color(43, 43 ,43));
+        textPane.setForeground(new Color(169, 183, 198));
+        textPane.setCaretColor(Color.WHITE);
+        textPane.setSelectionColor(new Color(33, 66, 131));
+    }
+
     public Runnable getOnChangeCallback() {
         return onChangeCallback;
     }
@@ -165,10 +186,15 @@ public class EditorPanel extends JPanel {
     public void setDocument(Document document){
         this.document = document;
 
-        textPane.setText(document.getContent());
-        highlight();
-    }
+        isUpdating = true;
 
+        try {
+            textPane.setText(document.getContent());highlight();
+        }finally {
+            isUpdating = false;
+        }
+
+    }
     public Document getDocument(){
         return document;
     }
