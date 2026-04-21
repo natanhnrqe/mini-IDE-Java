@@ -52,6 +52,10 @@ public class FileExplorerPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(jTree);
         add(scrollPane, BorderLayout.CENTER);
 
+        jTree.setBackground(new Color(43, 43, 43));
+        jTree.setForeground(new Color(169, 183, 198));
+
+
         // Evento de duplo clique para abrir arquivos
         jTree.addMouseListener(new MouseAdapter(){
             @Override

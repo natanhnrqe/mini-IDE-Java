@@ -25,6 +25,11 @@ public class FileTreeCellRender extends DefaultTreeCellRenderer {
         fileIcon   = loadIcon("/icons/arquivo.png", 18);
         javaIcon   = loadIcon("/icons/javaico.png", 18);
 
+        setBackgroundNonSelectionColor(new Color(43,43,43));
+        setTextNonSelectionColor(new Color(169, 183,198));
+        setBackgroundSelectionColor(new Color(33,61,131));
+        setTextSelectionColor(Color.WHITE);
+
     }
     @Override
     public Component getTreeCellRendererComponent(

@@ -14,8 +14,10 @@ public class ConsolePanel extends JPanel {
         consoleArea = new JTextArea();
         consoleArea.setFont(new Font("Consolas", Font.PLAIN, 14));
         consoleArea.setEditable(false);
-        consoleArea.setBackground(Color.BLACK);
-        consoleArea.setForeground(Color.GREEN);
+
+        consoleArea.setBackground(new Color(43, 43, 43));
+        consoleArea.setForeground(new Color(169, 183, 198));
+        consoleArea.setCaretColor(Color.WHITE);
 
         JScrollPane scrollPane = new JScrollPane(consoleArea);
 
