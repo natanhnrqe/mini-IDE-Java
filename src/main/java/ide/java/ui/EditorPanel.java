@@ -5,10 +5,10 @@ import ide.java.editor.Document;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +23,11 @@ public class EditorPanel extends JPanel {
     private Style commentStyle;
     private Style numberStyle;
     private Style methodStyle;
+    private Object currentLineHighlight;
+    private LineNumberPanel lineNumbers;
+    private final List<Object> breakpointHighlights = new ArrayList<>();
+
+
 
     private final String[] keywords = {
             "public", "class", "static", "void",
@@ -42,11 +47,28 @@ public class EditorPanel extends JPanel {
         setLayout(new BorderLayout());
 
         textPane = new JTextPane();
+        textPane.setMargin(new Insets(0,0,0,0));
+        lineNumbers = new LineNumberPanel(textPane);
+
+        lineNumbers.setListener(() -> {
+            updateBreakpointHighlights();
+        });
+
+
+        textPane.addCaretListener(e -> {
+            highlightCurrentLine();
+            int offset = textPane.getCaretPosition();
+            Element root = textPane.getDocument().getDefaultRootElement();
+            int line = root.getElementIndex(offset);
+
+            lineNumbers.setCurrentLine(line);
+        });
+
         doc = textPane.getStyledDocument();
 
         setLayout(new BorderLayout());
         JScrollPane scrollPane = new JScrollPane(textPane);
-        LineNumberPanel lineNumbers = new LineNumberPanel(textPane);
+
         scrollPane.setRowHeaderView(lineNumbers);
         add(scrollPane, BorderLayout.CENTER);
 
@@ -233,6 +255,57 @@ public class EditorPanel extends JPanel {
         }
     }
 
+    private void highlightCurrentLine(){
+        Highlighter highlighter = textPane.getHighlighter();
+
+        if (currentLineHighlight != null){
+            highlighter.removeHighlight(currentLineHighlight);
+        }
+
+        try {
+            int caret = textPane.getCaretPosition();
+            Element root = textPane.getDocument().getDefaultRootElement();
+            int line = root.getElementIndex(caret);
+
+            Element lineElement = root.getElement(line);
+
+            currentLineHighlight = highlighter.addHighlight(
+                    lineElement.getStartOffset(),
+                    lineElement.getEndOffset(),
+                    new FullLineHighlightPaint(new Color(60,63,65))
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateBreakpointHighlights() {
+        Highlighter highlighter = textPane.getHighlighter();
+
+        // limpa antigos
+        for (Object h : breakpointHighlights) {
+            highlighter.removeHighlight(h);
+        }
+        breakpointHighlights.clear();
+
+        Element root = textPane.getDocument().getDefaultRootElement();
+
+        for (int line : lineNumbers.getBreakpoints()) {
+            try {
+                Element el = root.getElement(line);
+
+                Object tag = highlighter.addHighlight(
+                        el.getStartOffset(),
+                        el.getEndOffset(),
+                        new FullLineHighlightPaint(new Color(72, 76, 78))
+                );
+
+                breakpointHighlights.add(tag);
+
+            } catch (Exception ignored) {}
+        }
+    }
+
 
     private void applyDarkTheme(){
         textPane.setBackground(new Color(43, 43 ,43));
@@ -263,5 +336,25 @@ public class EditorPanel extends JPanel {
     }
     public Document getDocument(){
         return document;
+    }
+}
+
+class FullLineHighlightPaint implements Highlighter.HighlightPainter{
+    private final Color color;
+
+    public FullLineHighlightPaint(Color color){
+        this.color = color;
+    }
+
+    @Override
+    public void paint(Graphics g, int p0, int p1, Shape bounds, JTextComponent c) {
+        try {
+            Rectangle r = c.modelToView2D(p0).getBounds();
+
+            g.setColor(color);
+            g.fillRect(0, r.y, c.getWidth(), r.height);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
