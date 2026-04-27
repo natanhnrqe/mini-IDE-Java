@@ -7,9 +7,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,8 +63,12 @@ public class EditorPanel extends JPanel {
         ActionMap am = textPane.getActionMap();
 
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "tab-custom");
-
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "enter-custom");
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "autocomplete-down");
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "autocomplete-up");
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "autocomplete-close");
 
         am.put("enter-custom", new AbstractAction() {
             @Override
@@ -106,6 +108,50 @@ public class EditorPanel extends JPanel {
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                }
+            }
+        });
+
+        am.put("autocomplete-down", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isPopupVisible()){
+                    int i = suggestionList.getSelectedIndex();
+
+                    if (i < suggestionList.getModel().getSize() - 1){
+                        suggestionList.setSelectedIndex(i + 1);
+                        suggestionList.ensureIndexIsVisible(i + 1);
+                    }
+                }
+            }
+        });
+
+        am.put("autocomplete-up", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isPopupVisible()){
+                    int i = suggestionList.getSelectedIndex();
+
+                    if (i > 0){
+                        suggestionList.setSelectedIndex(i - 1);
+                        suggestionList.ensureIndexIsVisible(i - 1);
+                    }
+                }
+            }
+        });
+
+        am.put("autocomplete-close", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                hideAutocomplete();
+            }
+        });
+
+        suggestionList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2){
+                    insertSuggestion(suggestionList.getSelectedValue());
                 }
             }
         });
@@ -157,6 +203,12 @@ public class EditorPanel extends JPanel {
                 lineNumbers.repaint();
             }
         });
+        p
+
+        suggestionList.setBackground(new Color(43, 43, 43));
+        suggestionList.setForeground(new Color(169, 183, 198));
+        suggestionList.setSelectionBackground(new Color(75, 110, 175));
+        suggestionList.setSelectionForeground(Color.WHITE);
 
         keywordStyle = doc.addStyle("Keyword", null);
         StyleConstants.setForeground(keywordStyle, new Color(204, 120, 50));
