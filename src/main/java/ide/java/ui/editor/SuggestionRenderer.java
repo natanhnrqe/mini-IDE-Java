@@ -19,15 +19,15 @@ public class SuggestionRenderer extends DefaultListCellRenderer {
 
         Suggestion s = (Suggestion) value;
 
-        String icon = switch (s.getType()){
-            case "METHOD" -> "m";
-            case "KEYWORD" -> "k";
-            case "CLASS" -> "c";
-            case "VARIABLE" -> "v";
-            default -> "• ";
+        String icon = switch (s.getType()) {
+            case "METHOD" -> "ƒ";
+            case "KEYWORD" -> "K";
+            case "VARIABLE" -> "V";
+            case "CLASS" -> "C";
+            default -> "•";
         };
 
-        label.setText(icon + s.getText());
+        label.setText(String.format("%-3s %s", icon, s.getText()));
 
         label.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
 
