@@ -34,7 +34,8 @@ public class SuggestionRenderer extends JPanel implements ListCellRenderer<Sugge
         String icon = switch (s.getType()) {
             case "METHOD" -> "ƒ";
             case "KEYWORD" -> "K";
-            case "VARIABLE" -> "V";
+            case "INTERFACE" -> "I";
+            case "TYPE" -> "V";
             case "CLASS" -> "C";
             default -> "•";
         };

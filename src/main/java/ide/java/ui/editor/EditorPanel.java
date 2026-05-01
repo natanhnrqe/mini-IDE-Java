@@ -838,7 +838,15 @@ public class EditorPanel extends JPanel {
 
         List<Suggestion> list = new ArrayList<>();
 
-        addJavaBaseSuggestions(list, prefix);
+        addPrimitiveSuggestions(list, prefix);
+        addCoreClassSuggestions(list, prefix);
+        addCollectionsSuggestions(list, prefix);
+        addDateTimeSuggestions(list, prefix);
+        addIoFilesSuggestions(list, prefix);
+        addKeywordsSuggestions(list, prefix);
+        addStreamsFunctionalSuggestions(list, prefix);
+        addWrapperClassSuggestions(list, prefix);
+
 
         return list;
     }
@@ -883,108 +891,353 @@ public class EditorPanel extends JPanel {
 
     }
 
-    private void addJavaBaseSuggestions(List<Suggestion> list, String prefix){
+    private void addPrimitiveSuggestions(List<Suggestion> list, String prefix){
 
         // Tipos primitivos
         addIfMatch(list, prefix, "int", "TYPE",
-                "primitive type", "32-bit integer", 90);
-
-        addIfMatch(list, prefix, "double", "TYPE",
-                "primitive type", "true or false", 90);
-
-        addIfMatch(list, prefix, "boolean", "TYPE",
-                "primitive type", "32-bit integer", 90);
-
-        addIfMatch(list, prefix, "char", "TYPE",
-                "primitive type", "single character", 90);
+                "primitive", "32-bit integer", 95);
 
         addIfMatch(list, prefix, "long", "TYPE",
-                "primitive type", "64-bit integer", 90);
+                "primitive", "64-bit integer", 95);
+
+        addIfMatch(list, prefix, "double", "TYPE",
+                "primitive", "64-bit decimal", 95);
 
         addIfMatch(list, prefix, "float", "TYPE",
-                "primitive type", "32-bit decimal", 90);
+                "primitive", "32-bit decimal", 90);
+
+        addIfMatch(list, prefix, "boolean", "TYPE",
+                "primitive", "true or false", 95);
+
+        addIfMatch(list, prefix, "char", "TYPE",
+                "primitive", "Unicode character", 90);
+
+        addIfMatch(list, prefix, "byte", "TYPE",
+                "primitive", "8-bit integer", 90);
+
+        addIfMatch(list, prefix, "short", "TYPE",
+                "primitive", "16-bit integer", 90);
 
 
-        // Classes comuns
-        addIfMatch(list, prefix, "String", "CLASS",
-                "java.lang.String", "Text object", 95);
+    }
+
+    private void addWrapperClassSuggestions(List<Suggestion> list, String prefix){
 
         addIfMatch(list, prefix, "Integer", "CLASS",
-                "java.lang.Integer", "Wrapper for int", 95);
+                "wrapper", "Wrapper for int", 88);
 
-        addIfMatch(list, prefix, "System", "CLASS",
-                "java.lang.System", "System utilities", 95);
+        addIfMatch(list, prefix, "Long", "CLASS",
+                "wrapper", "Wrapper for long", 88);
 
-        addIfMatch(list, prefix, "Math", "CLASS",
-                "java.lang.Math", "Math helpers", 95);
+        addIfMatch(list, prefix, "Double", "CLASS",
+                "wrapper", "Wrapper for double", 88);
+
+        addIfMatch(list, prefix, "Float", "CLASS",
+                "wrapper", "Wrapper for float", 85);
+
+        addIfMatch(list, prefix, "Boolean", "CLASS",
+                "wrapper", "Wrapper for boolean", 88);
+
+        addIfMatch(list, prefix, "Character", "CLASS",
+                "wrapper", "Wrapper for char", 88);
+
+        addIfMatch(list, prefix, "Byte", "CLASS",
+                "wrapper", "Wrapper for byte", 80);
+
+        addIfMatch(list, prefix, "Short", "CLASS",
+                "wrapper", "Wrapper for short", 80);
+
+    }
+
+    private void addCoreClassSuggestions(List<Suggestion> list, String prefix){
+
+        addIfMatch(list, prefix, "String", "CLASS",
+                "java.lang", "Immutable text", 100);
 
         addIfMatch(list, prefix, "Object", "CLASS",
-                "java.lang.Object", "Base class", 95);
+                "java.lang", "Root class of all objects", 90);
 
-        // Collections
+        addIfMatch(list, prefix, "System", "CLASS",
+                "java.lang", "System utilities", 100);
+
+        addIfMatch(list, prefix, "Math", "CLASS",
+                "java.lang", "Math helpers", 95);
+
+        addIfMatch(list, prefix, "Thread", "CLASS",
+                "java.lang", "Concurrent thread", 85);
+
+        addIfMatch(list, prefix, "Runnable", "INTERFACE",
+                "java.lang", "Runnable task", 82);
+
+        addIfMatch(list, prefix, "Exception", "CLASS",
+                "java.lang", "Checked exception", 85);
+
+        addIfMatch(list, prefix, "RuntimeException", "CLASS",
+                "java.lang", "Unchecked exception", 85);
+
+        addIfMatch(list, prefix, "StringBuilder", "CLASS",
+                "java.lang", "Mutable text builder", 92);
+
+        addIfMatch(list, prefix, "StringBuffer", "CLASS",
+                "java.lang", "Synchronized text builder", 80);
+
+        addIfMatch(list, prefix, "StringBuffer", "CLASS",
+                "java.lang", "Synchronized text builder", 80);
+
+        addIfMatch(list, prefix, "Class", "CLASS",
+                "reflection", "Runtime type info", 75);
+
+        addIfMatch(list, prefix, "Enum", "CLASS",
+                "java.lang", "Enum base type", 80);
+    }
+
+    private void addCollectionsSuggestions(List<Suggestion> list, String prefix){
 
         addIfMatch(list, prefix, "List", "INTERFACE",
-                "java.lang.List", "Ordered collection", 92);
+                "java.util", "Ordered collection", 98);
 
         addIfMatch(list, prefix, "ArrayList", "CLASS",
-                "java.lang.ArrayList", "Resizable list", 92);
+                "java.util", "Dynamic array list", 100);
 
-        addIfMatch(list, prefix, "Map", "INTERFACE",
-                "java.lang.Map", "Key/Value structure", 92);
-
-        addIfMatch(list, prefix, "HashMap", "CLASS",
-                "java.lang.HashMap", "Map implementation", 92);
+        addIfMatch(list, prefix, "LinkedList", "CLASS",
+                "java.util", "Linked list", 82);
 
         addIfMatch(list, prefix, "Set", "INTERFACE",
-                "java.lang.Set", "Unique elements", 92);
+                "java.util", "Unique elements", 94);
 
         addIfMatch(list, prefix, "HashSet", "CLASS",
-                "java.lang.HashSet", "Set implementation", 92);
+                "java.util", "Set implementation", 90);
 
-        // Keywords
+        addIfMatch(list, prefix, "TreeSet", "CLASS",
+                "java.util", "Sorted set", 82);
+
+        addIfMatch(list, prefix, "Map", "INTERFACE",
+                "java.util", "Key value pairs", 97);
+
+        addIfMatch(list, prefix, "HashMap", "CLASS",
+                "java.util", "Map implementation", 100);
+
+        addIfMatch(list, prefix, "TreeMap", "CLASS",
+                "java.util", "Sorted map", 82);
+
+        addIfMatch(list, prefix, "Queue", "INTERFACE",
+                "java.util", "FIFO structure", 85);
+
+        addIfMatch(list, prefix, "Deque", "INTERFACE",
+                "java.util", "Double ended queue", 80);
+
+        addIfMatch(list, prefix, "PriorityQueue", "CLASS",
+                "java.util", "Priority queue", 78);
+
+        addIfMatch(list, prefix, "Collections", "CLASS",
+                "java.util", "Collection helpers", 75);
+
+        addIfMatch(list, prefix, "Array", "CLASS",
+                "java.util", "Array helpers", 92);
+
+        addIfMatch(list, prefix, "Optional", "CLASS",
+                "java.util", "Nullable wrapper", 95);
+
+    }
+
+    private void addStreamsFunctionalSuggestions(List<Suggestion> list, String prefix){
+
+        addIfMatch(list, prefix, "Stream", "INTERFACE",
+                "java.util.stream", "Stream pipeline", 95);
+
+        addIfMatch(list, prefix, "Collectors", "CLASS",
+                "java.util.stream", "Terminal collectors", 92);
+
+        addIfMatch(list, prefix, "Predicate", "INTERFACE",
+                "functional", "Boolean lambda", 85);
+
+        addIfMatch(list, prefix, "Function", "INTERFACE",
+                "functional", "Map input to output", 88);
+
+        addIfMatch(list, prefix, "Consumer", "INTERFACE",
+                "functional", "Consumes value", 84);
+
+        addIfMatch(list, prefix, "Supplier", "INTERFACE",
+                "functional", "Supplies value", 84);
+
+        addIfMatch(list, prefix, "Comparator", "INTERFACE",
+                "java.util", "Compares value", 88);
+    }
+
+    private void addDateTimeSuggestions(List<Suggestion> list, String prefix){
+
+        addIfMatch(list, prefix, "LocalDate", "CLASS",
+                "java.time", "Date only", 92);
+
+        addIfMatch(list, prefix, "LocalTime", "CLASS",
+                "java.time", "Time only", 88);
+
+        addIfMatch(list, prefix, "LocalDateTime", "CLASS",
+                "java.time", "Date and Time", 95);
+
+        addIfMatch(list, prefix, "Instant", "CLASS",
+                "java.time", "UTC timestamp", 84);
+
+        addIfMatch(list, prefix, "Duration", "CLASS",
+                "java.time", "Time span", 82);
+
+        addIfMatch(list, prefix, "Period", "CLASS",
+                "java.time", "Date span", 80);
+
+        addIfMatch(list, prefix, "DateTimeFormatter", "CLASS",
+                "java.time", "Format dates", 86);
+
+        addIfMatch(list, prefix, "ZoneId", "CLASS",
+                "java.time", "Timezone id", 78);
+    }
+
+    private void addIoFilesSuggestions(List<Suggestion> list, String prefix){
+
+        addIfMatch(list, prefix, "Path", "INTERFACE",
+                "nio.file", "Filesystem path", 90);
+
+        addIfMatch(list, prefix, "Paths", "CLASS",
+                "nio.file", "Path factory", 80);
+
+        addIfMatch(list, prefix, "Files", "CLASS",
+                "nio.file", "File utilities", 95);
+
+        addIfMatch(list, prefix, "File", "CLASS",
+                "io", "Legacy file api", 78);
+
+        addIfMatch(list, prefix, "Scanner", "CLASS",
+                "util", "Text scanner", 90);
+
+        addIfMatch(list, prefix, "BufferedReader", "CLASS",
+                "io", "Buffered reader", 82);
+
+        addIfMatch(list, prefix, "BufferedWriter", "CLASS",
+                "io", "Buffered writer", 80);
+
+        addIfMatch(list, prefix, "InputStream", "CLASS",
+                "io", "Byte input", 75);
+
+        addIfMatch(list, prefix, "OutputStream", "CLASS",
+                "io", "Byte output", 75);
+
+    }
+
+
+    private void addKeywordsSuggestions(List<Suggestion> list, String prefix){
+
         addIfMatch(list, prefix, "public", "KEYWORD",
-                "access modifier", "Visible everywhere", 80);
+                "access modifier", "Visible everywhere", 100);
 
         addIfMatch(list, prefix, "private", "KEYWORD",
-                "access modifier", "Visible inside class", 80);
+                "access modifier", "Visible inside class", 100);
 
         addIfMatch(list, prefix, "protected", "KEYWORD",
-                "access modifier", "visible to subclasses", 80);
+                "access modifier", "visible to subclasses", 95);
 
         addIfMatch(list, prefix, "static", "KEYWORD",
-                "class modifier", "Belongs to class, not instance", 78);
+                "class modifier", "Belongs to class, not instance", 95);
 
         addIfMatch(list, prefix, "final", "KEYWORD",
-                "modifier", "Cannot change", 78);
+                "modifier", "Immutable/final", 92);
 
-        addIfMatch(list, prefix, "interface", "KEYWORD",
-                "declaration", "Defines interface", 78);
+        addIfMatch(list, prefix, "abstract", "KEYWORD",
+                "modifier", "Abstract type/member", 88);
+
 
 
         addIfMatch(list, prefix, "class", "KEYWORD",
-                "type declaration", "Defines a class", 78);
+                "declaration", "Declares a class", 100);
+
+        addIfMatch(list, prefix, "interface", "KEYWORD",
+                "declaration", "Declares interface", 95);
+
+        addIfMatch(list, prefix, "enum", "KEYWORD",
+                "declaration", "Declares enum", 88);
+
+        addIfMatch(list, prefix, "record", "KEYWORD",
+                "java21", "Immutable data carrier", 100);
+
+        addIfMatch(list, prefix, "sealed", "KEYWORD",
+                "java21", "Restrict inheritance", 95);
+
+        addIfMatch(list, prefix, "permits", "KEYWORD",
+                "java21", "Sealed subclasses", 88);
+
+        addIfMatch(list, prefix, "non-sealed", "KEYWORD",
+                "java21", "Reopens hierarchy", 82);
+
 
         addIfMatch(list, prefix, "if", "KEYWORD",
-                "flow control", "Conditional block ", 78);
+                "flow control", "Conditional", 100);
 
         addIfMatch(list, prefix, "else", "KEYWORD",
-                "flow control", "Alternative block", 75);
+                "flow control", "Alternative branch", 95);
+
+        addIfMatch(list, prefix, "switch", "KEYWORD",
+                "flow control", "Multi branch", 92);
+
+        addIfMatch(list, prefix, "case", "KEYWORD",
+                "flow control", "Switch branch", 88);
+
+        addIfMatch(list, prefix, "default", "KEYWORD",
+                "flow control", "Default branch", 82);
+
 
         addIfMatch(list, prefix, "for", "KEYWORD",
-                "loop", "For loop", 75);
+                "loop", "For loop", 100);
 
         addIfMatch(list, prefix, "while", "KEYWORD",
-                "loop", "While loop", 75);
+                "loop", "While loop", 95);
 
-        addIfMatch(list, prefix, "void", "KEYWORD",
-                "return type", "Returns nothing", 75);
+        addIfMatch(list, prefix, "do", "KEYWORD",
+                "loop", "Do while loop", 82);
 
-        addIfMatch(list, prefix, "new", "KEYWORD",
-                "operator", "Creates object", 75);
+        addIfMatch(list, prefix, "break", "KEYWORD",
+                "loop", "Exits loop", 82);
+
+        addIfMatch(list, prefix, "continue", "KEYWORD",
+                "loop", "Next iteration", 95);
+
+
+        addIfMatch(list, prefix, "try", "KEYWORD",
+                "exceptions", "Try block", 90);
+
+        addIfMatch(list, prefix, "catch", "KEYWORD",
+                "exceptions", "Catch exception", 90);
+
+        addIfMatch(list, prefix, "finally", "KEYWORD",
+                "exceptions", "Always runs", 82);
+
+        addIfMatch(list, prefix, "throw", "KEYWORD",
+                "exceptions", "Throw exception", 82);
+
+        addIfMatch(list, prefix, "throws", "KEYWORD",
+                "exceptions", "Declares throws", 82);
+
 
         addIfMatch(list, prefix, "return", "KEYWORD",
-                "flow statement", "Returns a value", 65);
+                "flow statement", "Returns a value", 100);
+
+        addIfMatch(list, prefix, "void", "KEYWORD",
+                "return type", "Returns nothing", 95);
+
+        addIfMatch(list, prefix, "new", "KEYWORD",
+                "operator", "Creates object", 100);
+
+        addIfMatch(list, prefix, "this", "KEYWORD",
+                "reference", "Current instance", 92);
+
+        addIfMatch(list, prefix, "super", "KEYWORD",
+                "reference", "Parent instance", 88);
+
+        addIfMatch(list, prefix, "instanceof", "KEYWORD",
+                "operator", "Type check", 82);
+
+        addIfMatch(list, prefix, "var", "KEYWORD",
+                "local inference", "Inferred local type", 95);
+
     }
+
 
     private void sortSuggestion(List<Suggestion> list){
         list.sort((a,b) ->
