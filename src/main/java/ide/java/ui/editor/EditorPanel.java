@@ -42,8 +42,8 @@ public class EditorPanel extends JPanel {
     private static final String[] keywords = {
             "public", "class", "static", "void",
             "if", "else", "for", "while", "return",
-            "new", "int", "double", "String", "boolean",
-            "record", "sealed", "permits", "var", "yield"
+            "new", "record", "sealed", "permits", "var", "yield",
+            "interface"
     };
 
     // Representa o arquivo atual em memoria (model)
@@ -210,42 +210,45 @@ public class EditorPanel extends JPanel {
             }
         });
 
+
+
         suggestionList.setBackground(new Color(43, 43, 43));
         suggestionList.setForeground(new Color(169, 183, 198));
         suggestionList.setSelectionBackground(new Color(75, 110, 175));
         suggestionList.setSelectionForeground(Color.WHITE);
 
         typeStyle = doc.addStyle("Type", null);
-        StyleConstants.setForeground(typeStyle, new Color(86, 156, 214));
+        StyleConstants.setForeground(typeStyle, new Color(78, 201, 176));
 
         classStyle = doc.addStyle("Class", null);
-        StyleConstants.setForeground(classStyle, new Color(78, 201, 176));
+        StyleConstants.setForeground(classStyle, new Color(78, 201, 176 ));
 
         annotationStyle = doc.addStyle("Annotation", null);
-        StyleConstants.setForeground(annotationStyle, new Color(198, 210, 221));
+        StyleConstants.setForeground(annotationStyle, new Color(187, 181, 41));
 
         constantStyle = doc.addStyle("Constant", null);
-        StyleConstants.setForeground(constantStyle, new Color(181, 206, 168));
+        StyleConstants.setForeground(constantStyle, new Color(199, 125, 187));
 
         keywordStyle = doc.addStyle("Keyword", null);
-        StyleConstants.setForeground(keywordStyle, new Color(204, 120, 50));
+        StyleConstants.setForeground(keywordStyle, new Color(207, 109, 100));
 
         normalStyle = doc.addStyle("Normal", null);
-        StyleConstants.setForeground(normalStyle, new Color(169, 183, 198));
+        StyleConstants.setForeground(normalStyle, new Color(188, 190, 196));
 
         stringStyle = doc.addStyle("String", null);
-        StyleConstants.setForeground(stringStyle, new Color(106, 135, 89));
+        StyleConstants.setForeground(stringStyle, new Color(106, 171, 115));
 
         commentStyle = doc.addStyle("Comment", null);
-        StyleConstants.setForeground(commentStyle, new Color(128, 128, 128));
+        StyleConstants.setForeground(commentStyle, new Color(122, 126, 133));
 
         numberStyle = doc.addStyle("Number", null);
-        StyleConstants.setForeground(numberStyle, new Color(104,151,187));
+        StyleConstants.setForeground(numberStyle, new Color(42,172,184));
 
         methodStyle = doc.addStyle("Method", null);
-        StyleConstants.setForeground(methodStyle, new Color(255,198,109));
+        StyleConstants.setForeground(methodStyle, new Color(86,168,245));
 
         applyDarkTheme();
+
 
         // Listener que detecta QUALQUER mudanca no texto
         setupDocumentListener();
@@ -581,6 +584,7 @@ public class EditorPanel extends JPanel {
         Pattern pattern = Pattern.compile("//.*");
         Matcher matcher = pattern.matcher(text);
 
+
         while (matcher.find()){
             doc.setCharacterAttributes(
                     matcher.start(),
@@ -675,8 +679,8 @@ public class EditorPanel extends JPanel {
 
 
     private void applyDarkTheme(){
-        textPane.setBackground(new Color(43, 43 ,43));
-        textPane.setForeground(new Color(169, 183, 198));
+        textPane.setBackground(new Color(25, 26 ,28));
+        textPane.setForeground(new Color(188, 190, 196));
         textPane.setCaretColor(Color.WHITE);
         textPane.setSelectionColor(new Color(33, 66, 131));
     }
