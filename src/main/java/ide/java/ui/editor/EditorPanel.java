@@ -43,7 +43,9 @@ public class EditorPanel extends JPanel {
             "public", "class", "static", "void",
             "if", "else", "for", "while", "return",
             "new", "record", "sealed", "permits", "var", "yield",
-            "interface"
+            "interface", "int", "private", "protected", "do", "boolean",
+            "final"
+
     };
 
     // Representa o arquivo atual em memoria (model)
