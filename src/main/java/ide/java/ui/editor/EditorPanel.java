@@ -27,6 +27,10 @@ public class EditorPanel extends JPanel {
     private Style commentStyle;
     private Style numberStyle;
     private Style methodStyle;
+    private Style typeStyle;
+    private Style classStyle;
+    private Style annotationStyle;
+    private Style constantStyle;
     private Object currentLineHighlight;
     private LineNumberPanel lineNumbers;
     private final List<Object> breakpointHighlights = new ArrayList<>();
@@ -38,7 +42,8 @@ public class EditorPanel extends JPanel {
     private static final String[] keywords = {
             "public", "class", "static", "void",
             "if", "else", "for", "while", "return",
-            "new", "int", "double", "String", "boolean"
+            "new", "int", "double", "String", "boolean",
+            "record", "sealed", "permits", "var", "yield"
     };
 
     // Representa o arquivo atual em memoria (model)
@@ -210,9 +215,20 @@ public class EditorPanel extends JPanel {
         suggestionList.setSelectionBackground(new Color(75, 110, 175));
         suggestionList.setSelectionForeground(Color.WHITE);
 
+        typeStyle = doc.addStyle("Type", null);
+        StyleConstants.setForeground(typeStyle, new Color(86, 156, 214));
+
+        classStyle = doc.addStyle("Class", null);
+        StyleConstants.setForeground(classStyle, new Color(78, 201, 176));
+
+        annotationStyle = doc.addStyle("Annotation", null);
+        StyleConstants.setForeground(annotationStyle, new Color(198, 210, 221));
+
+        constantStyle = doc.addStyle("Constant", null);
+        StyleConstants.setForeground(constantStyle, new Color(181, 206, 168));
+
         keywordStyle = doc.addStyle("Keyword", null);
         StyleConstants.setForeground(keywordStyle, new Color(204, 120, 50));
-        StyleConstants.setBold(keywordStyle, true);
 
         normalStyle = doc.addStyle("Normal", null);
         StyleConstants.setForeground(normalStyle, new Color(169, 183, 198));
@@ -424,9 +440,111 @@ public class EditorPanel extends JPanel {
 
         highlightComments(text);
         highlightStrings(text);
-        highlightKeywords(text);
+
+
+        highlightStrings(text);
+        highlightStrings(text);
+
+        highlightAnnotations(text);
+        highlightConstants(text);
         highlightNumbers(text);
+
+        highlightTypes(text);
+        highlightClasses(text);
+
+        highlightKeywords(text);
         highlightMethods(text);
+    }
+
+    private void highlightTypes(String text){
+
+        String[] type = {
+                "int", "long", "double",
+                "float", "boolean", "char",
+                "byte", "short", "void"
+        };
+
+        for (String t : type){
+
+            Pattern p = Pattern.compile("\\b" + t + "\\b");
+
+            Matcher m = p.matcher(text);
+
+            while (m.find()) {
+                doc.setCharacterAttributes(
+                        m.start(),
+                        m.end() - m.start(),
+                        typeStyle,
+                        false
+                );
+            }
+        }
+    }
+
+    private void highlightClasses(String text) {
+
+        String[] classes = {
+                "String", "System", "Math",
+                "List", "ArrayList", "Map",
+                "HashMap", "Set", "HashSet",
+                "LocalDate", "LocalDateTime"
+        };
+
+        for (String c : classes) {
+
+            Pattern p =
+                    Pattern.compile("\\b" + c + "\\b");
+
+            Matcher m = p.matcher(text);
+
+            while (m.find()) {
+                doc.setCharacterAttributes(
+                        m.start(),
+                        m.end() - m.start(),
+                        classStyle,
+                        false
+                );
+            }
+        }
+    }
+
+    private void highlightAnnotations(
+            String text) {
+
+        Pattern p =
+                Pattern.compile("@\\w+");
+
+        Matcher m = p.matcher(text);
+
+        while (m.find()) {
+
+            doc.setCharacterAttributes(
+                    m.start(),
+                    m.end() - m.start(),
+                    annotationStyle,
+                    false
+            );
+        }
+    }
+
+    private void highlightConstants(
+            String text) {
+
+        Pattern p =
+                Pattern.compile(
+                        "\\b(true|false|null)\\b");
+
+        Matcher m = p.matcher(text);
+
+        while (m.find()) {
+
+            doc.setCharacterAttributes(
+                    m.start(),
+                    m.end() - m.start(),
+                    constantStyle,
+                    false
+            );
+        }
     }
 
     private void highlightKeywords(String text){
@@ -476,6 +594,7 @@ public class EditorPanel extends JPanel {
     private void highlightNumbers(String text){
         Pattern pattern = Pattern.compile("\\b\\d+\\b");
         Matcher matcher = pattern.matcher(text);
+        int i = 0;
 
         while (matcher.find()){
             doc.setCharacterAttributes(
@@ -500,6 +619,8 @@ public class EditorPanel extends JPanel {
             );
         }
     }
+
+
 
     private void highlightCurrentLine(){
         Highlighter highlighter = textPane.getHighlighter();
