@@ -1,4 +1,4 @@
-package ide.java.ui.editor;
+package com.eyecode.ui.editor;
 
 public class Suggestion {
 

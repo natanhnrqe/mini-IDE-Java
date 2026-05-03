@@ -1,4 +1,4 @@
-package ide.java.ui;
+package com.eyecode.ui;
 
 public interface BreakpointListener {
     void onBreakpointChanged();

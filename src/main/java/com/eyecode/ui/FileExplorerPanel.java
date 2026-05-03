@@ -1,4 +1,4 @@
-package ide.java.ui;
+package com.eyecode.ui;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;

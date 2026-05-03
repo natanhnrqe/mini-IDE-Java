@@ -1,4 +1,4 @@
-package ide.java.editor;
+package com.eyecode.editor;
 
 import java.io.File;
 

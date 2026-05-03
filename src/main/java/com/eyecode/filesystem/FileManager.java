@@ -1,4 +1,4 @@
-package ide.java.filesystem;
+package com.eyecode.filesystem;
 
 import java.io.*;
 

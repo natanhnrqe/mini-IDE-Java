@@ -1,7 +1,7 @@
-package ide.java.ui.editor;
+package com.eyecode.ui.editor;
 
-import ide.java.editor.Document;
-import ide.java.ui.LineNumberPanel;
+import com.eyecode.editor.Document;
+import com.eyecode.ui.LineNumberPanel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

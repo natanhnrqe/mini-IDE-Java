@@ -1,9 +1,9 @@
-package ide.java.ui;
+package com.eyecode.ui;
 
-import ide.java.editor.Document;
-import ide.java.filesystem.FileManager;
-import ide.java.run.RunManager;
-import ide.java.ui.editor.EditorPanel;
+import com.eyecode.editor.Document;
+import com.eyecode.filesystem.FileManager;
+import com.eyecode.run.RunManager;
+import com.eyecode.ui.editor.EditorPanel;
 
 import javax.swing.*;
 import java.awt.*;

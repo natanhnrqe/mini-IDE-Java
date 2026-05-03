@@ -1,6 +1,4 @@
-package ide.java.ui;
-
-import com.sun.jdi.event.BreakpointEvent;
+package com.eyecode.ui;
 
 import javax.swing.*;
 import javax.swing.text.Element;

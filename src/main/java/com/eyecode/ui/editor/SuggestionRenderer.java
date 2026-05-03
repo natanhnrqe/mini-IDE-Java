@@ -1,4 +1,4 @@
-package ide.java.ui.editor;
+package com.eyecode.ui.editor;
 
 import javax.swing.*;
 import java.awt.*;

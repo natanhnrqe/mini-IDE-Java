@@ -1,7 +1,7 @@
-package ide.java;
+package com.eyecode;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import ide.java.ui.MainWindow;
+import com.eyecode.ui.MainWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +18,7 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             new MainWindow();
+
         });
 
     }

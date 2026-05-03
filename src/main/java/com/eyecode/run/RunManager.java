@@ -1,4 +1,4 @@
-package ide.java.run;
+package com.eyecode.run;
 
 import java.io.BufferedReader;
 import java.io.File;
