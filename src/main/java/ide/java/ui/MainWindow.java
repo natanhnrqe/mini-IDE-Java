@@ -39,7 +39,7 @@ public class MainWindow extends JFrame {
     public MainWindow(){
 
         // Titulo da janela
-        setTitle("Mini IDE");
+        setTitle("EyeCode");
 
         //Tamanho inicial
         setSize(1000, 700);
