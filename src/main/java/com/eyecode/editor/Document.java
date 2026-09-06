@@ -8,6 +8,7 @@ public class Document {
     private String content;
     private Boolean modified;
 
+
     public Document(File file, String content) {
         this.file = file;
         this.content = content;
@@ -28,7 +29,6 @@ public class Document {
 
     public void setContent(String content) {
         this.content = content;
-        this.modified = true;
 
     }
 

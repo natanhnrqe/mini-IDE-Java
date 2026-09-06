@@ -38,3 +38,14 @@ export type CompletionPopupState = {
   selectedIndex: number;
   anchor: CompletionAnchor;
 };
+
+export type CompletionDetailEntry = {
+  name: string;
+  type?: string;
+  description?: string;
+};
+
+export type CompletionDetailSection = {
+  title: string;
+  entries: CompletionDetailEntry[];
+};
