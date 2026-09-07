@@ -16,7 +16,7 @@ import { MonacoHost } from './MonacoHost';
 import { NewProjectDialog } from './NewProjectDialog';
 import { NewJavaClassDialog } from './NewJavaClassDialog';
 import { ProjectExplorer } from './ProjectExplorer';
-import { LessonsDialog } from './LessonsDialog';
+import { LessonsPanel } from '../lessons/LessonsPanel';
 import { StatusBar } from './StatusBar';
 import { TopToolbar } from './TopToolbar';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -57,7 +57,7 @@ export function Workspace() {
   const [caret, setCaret] = useState({ line: 1, column: 1 });
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [newJavaClassOpen, setNewJavaClassOpen] = useState(false);
-  const [lessonsOpen, setLessonsOpen] = useState(false);
+  const [welcomeLessonsOpen, setWelcomeLessonsOpen] = useState(false);
 
   const updateDocument = useCallback((document: DocumentSnapshot) => {
     const tab: DocumentTab = { ...document };
@@ -360,21 +360,25 @@ export function Workspace() {
     catch (error) { setMessage(formatError(error)); }
   }
 
+  function openLessons() {
+    if (workspace.project) setSidePanel('learn');
+    else setWelcomeLessonsOpen(true);
+  }
+
   const activeDocument = documents.find(document => document.uri === activeUri);
   const activeEditorDocument = activeDocument?.kind === 'documentation' ? undefined : activeDocument;
   const toolbar = <TopToolbar projectName={workspace.project?.name} projectPath={workspace.project?.path} recentProjects={workspace.recentProjects} runState={runState}
     onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()} onNewFile={() => void newDocument()}
-    onOpenRecentProject={path => void openProject(path)} onLessons={() => setLessonsOpen(true)} onRun={() => void run('run')} onRerun={() => void run('rerun')}
+    onOpenRecentProject={path => void openProject(path)} onLessons={openLessons} onRun={() => void run('run')} onRerun={() => void run('rerun')}
     onStop={() => void run('stop')} onSelectConfiguration={id => void selectConfiguration(id)}
     onOpenSearch={() => setSidePanel('search')} onOpenSettings={() => setSidePanel('settings')}
     onWindowAction={action => void windowAction(action)} />;
   if (!workspace.project) return <main className="app-shell">
     {toolbar}
-    <WelcomeScreen recentProjects={workspace.recentProjects} onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()}
-      onOpenRecentProject={path => void openProject(path)} onLessons={() => setLessonsOpen(true)} />
+    {welcomeLessonsOpen ? <LessonsPanel onBackToWelcome={() => setWelcomeLessonsOpen(false)} /> : <WelcomeScreen recentProjects={workspace.recentProjects} onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()}
+      onOpenRecentProject={path => void openProject(path)} onLessons={openLessons} />}
     <div className="overlay-root">
       {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
-      {lessonsOpen && <LessonsDialog onClose={() => setLessonsOpen(false)} />}
     </div>
   </main>;
   return <main className="app-shell">
@@ -390,20 +394,21 @@ export function Workspace() {
           onRefresh={refreshProject} onOperation={operateProject} onOpenProject={() => void openProject()} onNewFile={() => void newDocument()} /> : <section className="auxiliary-panel">
           <header className="panel-heading"><span>{sideTitle(sidePanel)}</span></header>
           <div className="toolwindow-placeholder"><strong>{sideTitle(sidePanel)}</strong>
-            <span>This shell view is composed and ready for its dedicated service integration.</span></div>
+            <span>{sidePanel === 'learn' ? 'Explore o catálogo de aprendizado Java na área principal.' : 'This shell view is composed and ready for its dedicated service integration.'}</span></div>
         </section>}
       </aside>
       <section className="main-workspace">
-        <div className="editor-stack">
+        <div className={`editor-stack${sidePanel === 'learn' ? ' is-hidden' : ''}`}>
           <EditorTabs documents={documents} activeUri={activeUri} onActivate={uri => void activate(uri)} onClose={uri => void close(uri)} />
           <section className="editor-region">
             {!documents.length && <div className="workspace-empty"><div className="empty-mark">EC</div><strong>Start coding</strong>
               <span>Open a file from Project panel or create something new.</span><div><button type="button" className="primary-action" onClick={() => setNewJavaClassOpen(true)}>New Java Class</button>
-              <button type="button" className="quiet-action" onClick={() => setLessonsOpen(true)}>Lessons</button></div></div>}
+              <button type="button" className="quiet-action" onClick={openLessons}>Aulas</button></div></div>}
             <MonacoHost service={service} />
             <EditorDiagnosticStrip state={diagnostics} onNavigate={navigateProblem} />
           </section>
         </div>
+        <LessonsPanel active={sidePanel === 'learn'} />
       </section>
       <BottomPanel active={bottomPanel} output={runOutput} terminalState={terminalState}
         diagnostics={diagnostics} documents={documents} onSelect={selectBottomPanel}
@@ -417,7 +422,6 @@ export function Workspace() {
         onAction={action => service.openLearningAction(action)} onHover={hovered => service.setLearningHovered(hovered)} />}
       {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
       {newJavaClassOpen && <NewJavaClassDialog onCancel={() => setNewJavaClassOpen(false)} onCreate={createJavaClass} />}
-      {lessonsOpen && <LessonsDialog onClose={() => setLessonsOpen(false)} />}
     </div>
   </main>;
 }
@@ -427,7 +431,7 @@ function sideIcon(id: SidePanelId): string {
 }
 
 function sideTitle(id: SidePanelId): string {
-  return ({ project: 'Project', search: 'Search', learn: 'Learn', documentation: 'Documentation', settings: 'Settings' })[id];
+  return ({ project: 'Project', search: 'Search', learn: 'Aulas', documentation: 'Documentation', settings: 'Settings' })[id];
 }
 
 function formatError(error: unknown): string {

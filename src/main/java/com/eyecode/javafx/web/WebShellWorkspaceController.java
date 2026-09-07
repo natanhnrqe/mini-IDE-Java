@@ -45,6 +45,7 @@ public final class WebShellWorkspaceController {
     private final EditorManager manager;
     private final WebShellCompletionController completionController;
     private final WebShellLearningController learningController;
+    private final WebShellLessonsController lessonsController;
     private final WebShellDiagnosticsController diagnosticsController;
     private final ProjectLifecycleService projectLifecycleService;
     private final ProjectLifecycleService.Listener terminalWorkspaceListener;
@@ -89,6 +90,7 @@ public final class WebShellWorkspaceController {
                 new WebShellEditorViewFactory());
         this.completionController = new WebShellCompletionController(surface, manager);
         this.learningController = new WebShellLearningController(surface, manager, this::openDocumentationTarget, this::openJdkSource);
+        this.lessonsController = new WebShellLessonsController(surface);
         this.diagnosticsController = new WebShellDiagnosticsController(surface);
         this.projectLifecycleService = new ProjectLifecycleService();
         this.runService = new RunService(projectLifecycleService);

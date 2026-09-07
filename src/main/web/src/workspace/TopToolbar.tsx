@@ -53,7 +53,7 @@ export function TopToolbar({ projectName, projectPath, recentProjects, runState,
           <div className="project-switcher-actions">
             <button type="button" onClick={() => { setSwitcherOpen(false); onNewProject(); }}>New Project</button>
             <button type="button" onClick={() => { setSwitcherOpen(false); onOpenProject(); }}>Open Project</button>
-            <button type="button" onClick={() => { setSwitcherOpen(false); onLessons(); }}>Lessons</button>
+            <button type="button" onClick={() => { setSwitcherOpen(false); onLessons(); }}>Aulas</button>
           </div>
         </div>}
       </div>

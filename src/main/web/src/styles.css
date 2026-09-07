@@ -891,6 +891,7 @@ html, body, #root {
   background: transparent;
   grid-column: 3;
   grid-row: 1;
+  position: relative;
 }
 
 .editor-stack {
@@ -900,6 +901,58 @@ html, body, #root {
   min-width: 0;
   min-height: 0;
   height: 100%;
+}
+
+.editor-stack.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lessons-panel {
+  display: none;
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 34px 42px 48px;
+  box-sizing: border-box;
+  background: var(--surface-editor);
+  color: var(--eyecode-text);
+  font-family: var(--eyecode-font-ui);
+}
+
+.lessons-panel.is-active { display: block; }
+.lessons-header { display: flex; justify-content: space-between; gap: 28px; max-width: 1080px; margin: 0 auto 30px; }
+.lessons-header h1, .lessons-header p, .lesson-overview h2, .lesson-overview p { margin: 0; }
+.lessons-header h1 { margin-top: 8px; font: 650 28px var(--eyecode-font-ui); }
+.lessons-header p { max-width: 630px; margin-top: 9px; color: var(--eyecode-muted); font-size: 13px; line-height: 1.55; }
+.lessons-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; color: var(--eyecode-muted); font-size: 12px; }
+.lessons-breadcrumb button { padding: 0; border: 0; background: transparent; color: var(--eyecode-accent); font: inherit; cursor: pointer; }
+.lessons-content, .lessons-message { max-width: 1080px; margin: 0 auto; }
+.lessons-message { padding: 18px; border: 1px solid rgba(255, 255, 255, .1); color: var(--eyecode-muted); font-size: 13px; }
+.lessons-continue, .lesson-overview { display: grid; gap: 7px; margin-bottom: 24px; padding: 18px 20px; border: 1px solid rgba(94, 166, 255, .24); border-radius: 8px; background: rgba(80, 130, 190, .08); }
+.lessons-continue span, .lessons-card small, .lesson-overview small { color: var(--eyecode-muted); font-size: 12px; }
+.lessons-category-grid, .lessons-topic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lessons-card { display: grid; min-height: 138px; padding: 18px; border: 1px solid rgba(255, 255, 255, .1); border-radius: 7px; background: rgba(255, 255, 255, .025); color: var(--eyecode-text); text-align: left; cursor: pointer; }
+.lessons-card:hover, .lessons-card:focus-visible { border-color: rgba(94, 166, 255, .55); background: rgba(94, 166, 255, .08); }
+.lessons-card strong { font-size: 15px; }
+.lessons-card span { color: var(--eyecode-muted); font-size: 12px; line-height: 1.5; }
+.lessons-roadmap { display: grid; gap: 18px; }
+.lessons-roadmap section { padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.lessons-roadmap h2, .lessons-available h2, .lesson-overview h3 { margin: 0 0 10px; font-size: 15px; }
+.lessons-roadmap ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lessons-roadmap li { display: grid; gap: 3px; padding: 10px; background: rgba(255, 255, 255, .025); color: var(--eyecode-text); font-size: 12px; }
+.lessons-roadmap li span { color: var(--eyecode-muted); }
+.lessons-available { margin-top: 27px; }
+.lessons-available > p { color: var(--eyecode-muted); font-size: 13px; }
+.lesson-overview { max-width: 650px; background: rgba(255, 255, 255, .025); }
+.lesson-overview p { color: var(--eyecode-muted); line-height: 1.55; }
+.lesson-overview .primary-action { justify-self: start; margin-top: 8px; }
+.lesson-meta, .lesson-concepts { display: flex; flex-wrap: wrap; gap: 7px; }
+.lesson-meta span, .lesson-concepts span { padding: 4px 8px; border-radius: 4px; background: rgba(94, 166, 255, .11); color: var(--eyecode-accent); font-size: 12px; }
+
+@media (max-width: 720px) {
+  .lessons-panel { padding: 24px 20px 36px; }
+  .lessons-header { display: grid; gap: 16px; }
 }
 
 .editor-tabs {
@@ -1070,11 +1123,6 @@ html, body, #root {
 .welcome-recents button strong { font: 600 12px var(--font-ui); }
 .welcome-recents button span { color: var(--text-muted); font: 11px var(--font-code); }
 
-.lessons-backdrop { position: fixed; z-index: 53; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(0,0,0,.42); pointer-events: auto; }
-.lessons-dialog { display: grid; gap: 12px; width: min(360px, 100%); padding: 20px; border: 1px solid rgba(255,255,255,.14); border-radius: 9px; color: #e5e7ed; background: #25262c; box-shadow: 0 20px 48px rgba(0,0,0,.42); }
-.lessons-dialog strong { font: 600 15px var(--font-ui); }
-.lessons-dialog p { margin: 0; color: var(--text-muted); font: 12px/1.5 var(--font-ui); }
-.lessons-dialog button { justify-self: end; min-height: 30px; padding: 0 11px; border: 1px solid rgba(255,255,255,.15); border-radius: 5px; color: #dfe2e7; background: #303238; font: 12px var(--font-ui); }
 
 .editor-tab.is-active .editor-tab-label {
   color: #f0eff7;
