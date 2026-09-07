@@ -16,6 +16,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream")
                         .category("Interface")
                         .documentation("A sequence of elements supporting sequential and parallel aggregate operations (Java 8+).")
+                        .example("Stream<String> names = Stream.of(\"Ana\", \"Bob\");\nnames.forEach(System.out::println);")
                         .build(),
 
                 CompletionItem.builder("IntStream", "IntStream", CompletionItemKind.INTERFACE)
@@ -63,6 +64,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream.Stream")
                         .category("Method")
                         .documentation("Returns a stream consisting of elements that match the given predicate.")
+                        .example("List<String> names = List.of(\"Ana\", \"Bob\", \"Alice\");\nList<String> result = names.stream()\n        .filter(name -> name.startsWith(\"A\"))\n        .toList();")
                         .build(),
 
                 CompletionItem.builder("map", "map", CompletionItemKind.METHOD)
@@ -72,6 +74,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream.Stream")
                         .category("Method")
                         .documentation("Applies the mapper function to each element and returns a stream of the results.")
+                        .example("List<String> names = List.of(\"Ana\", \"Bob\");\nList<Integer> lengths = names.stream()\n        .map(String::length)\n        .toList();")
                         .build(),
 
                 CompletionItem.builder("flatMap", "flatMap", CompletionItemKind.METHOD)
@@ -90,6 +93,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream.Stream")
                         .category("Method")
                         .documentation("Performs the given action for each element of the stream.")
+                        .example("Stream.of(\"Ana\", \"Bob\").forEach(System.out::println);")
                         .build(),
 
                 CompletionItem.builder("collect", "collect", CompletionItemKind.METHOD)
@@ -109,6 +113,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream.Stream")
                         .category("Method")
                         .documentation("Performs a reduction on the elements of the stream using an associative accumulation function.")
+                        .example("int total = Stream.of(1, 2, 3).reduce(0, Integer::sum);")
                         .build(),
 
                 CompletionItem.builder("sorted", "sorted", CompletionItemKind.METHOD)
@@ -118,6 +123,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream.Stream")
                         .category("Method")
                         .documentation("Returns a stream sorted in natural order.")
+                        .example("List<Integer> sorted = Stream.of(3, 1, 2).sorted().toList();")
                         .build(),
 
                 CompletionItem.builder("distinct", "distinct", CompletionItemKind.METHOD)
@@ -163,6 +169,7 @@ public final class JavaStreamSymbols {
                         .owner("java.util.stream.Stream")
                         .category("Method")
                         .documentation("Returns an Optional describing the first element of the stream, or empty if the stream is empty.")
+                        .example("Optional<String> first = Stream.of(\"Ana\", \"Bob\").findFirst();")
                         .build(),
 
                 CompletionItem.builder("findAny", "findAny", CompletionItemKind.METHOD)

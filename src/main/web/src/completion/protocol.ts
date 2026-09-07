@@ -19,6 +19,8 @@ export type MonacoCompletionItem = {
   example: string;
   category: string;
   matchIndices: number[];
+  detailSections?: CompletionDetailSection[];
+  exampleLabel?: string;
 };
 
 export type CompletionResponse = {

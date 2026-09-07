@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.List;
+import java.util.Optional;
 
 public class ProjectService {
 
@@ -23,6 +24,7 @@ public class ProjectService {
 
     private final List<ProjectInfo> recentProjects;
     private final Path storagePath;
+    private String lastOpenedWorkspace;
 
     public ProjectService() {
         this(Paths.get(System.getProperty("user.home"), STORAGE_FILE));
@@ -44,17 +46,50 @@ public class ProjectService {
     }
 
     public void addRecent(ProjectInfo project) {
-        if (project == null || project.getPath() == null) {
+        if (addRecentInternal(project)) {
+            save();
+        }
+    }
+
+    public void recordOpened(ProjectInfo project) {
+        if (!addRecentInternal(project)) {
             return;
         }
+        lastOpenedWorkspace = recentProjects.getFirst().getPath();
+        save();
+    }
+
+    public Optional<Path> lastOpenedWorkspace() {
+        if (lastOpenedWorkspace == null) {
+            return Optional.empty();
+        }
+        try {
+            Path path = Paths.get(lastOpenedWorkspace);
+            if (Files.isDirectory(path) && !isLegacyEyeCodeTestFixture(path)) {
+                return Optional.of(path);
+            }
+        } catch (RuntimeException ignored) {
+        }
+        lastOpenedWorkspace = null;
+        save();
+        return Optional.empty();
+    }
+
+    private boolean addRecentInternal(ProjectInfo project) {
+        if (project == null || project.getPath() == null) {
+            return false;
+        }
         String normalizedPath = normalize(project.getPath());
+        if (normalizedPath == null) {
+            return false;
+        }
         recentProjects.removeIf(existing -> normalize(existing.getPath()).equals(normalizedPath));
         recentProjects.add(0, new ProjectInfo(
                 project.getName(), normalizedPath, project.getType(), System.currentTimeMillis()));
         if (recentProjects.size() > MAX_RECENT) {
             recentProjects.remove(recentProjects.size() - 1);
         }
-        save();
+        return true;
     }
 
     public void removeRecent(String path) {
@@ -62,7 +97,13 @@ public class ProjectService {
             return;
         }
         String normalizedPath = normalize(path);
+        if (normalizedPath == null) {
+            return;
+        }
         recentProjects.removeIf(p -> normalize(p.getPath()).equals(normalizedPath));
+        if (normalizedPath.equals(lastOpenedWorkspace)) {
+            lastOpenedWorkspace = null;
+        }
         save();
     }
 
@@ -91,7 +132,7 @@ public class ProjectService {
             Files.createDirectories(storagePath.getParent());
             try (ObjectOutputStream oos = new ObjectOutputStream(
                     new BufferedOutputStream(Files.newOutputStream(storagePath)))) {
-                oos.writeObject(new ArrayList<>(recentProjects));
+                oos.writeObject(new ProjectHistory(lastOpenedWorkspace, new ArrayList<>(recentProjects)));
             }
         } catch (IOException e) {
             System.err.println("Failed to save recent projects: " + e.getMessage());
@@ -105,17 +146,27 @@ public class ProjectService {
         try (ObjectInputStream ois = new ObjectInputStream(
                 new BufferedInputStream(Files.newInputStream(storagePath)))) {
             Object obj = ois.readObject();
-            if (obj instanceof List) {
+            List<?> storedProjects = null;
+            if (obj instanceof ProjectHistory history) {
+                lastOpenedWorkspace = normalize(history.lastOpenedWorkspace());
+                storedProjects = history.recentProjects();
+                if (lastOpenedWorkspace != null && !isEligibleWorkspace(lastOpenedWorkspace)) {
+                    lastOpenedWorkspace = null;
+                    changed = true;
+                }
+            } else if (obj instanceof List<?>) {
+                storedProjects = (List<?>) obj;
+            }
+            if (storedProjects != null) {
                 recentProjects.clear();
-                for (Object item : (List<?>) obj) {
+                for (Object item : storedProjects) {
                     if (item instanceof ProjectInfo info) {
                         String normalizedPath = normalize(info.getPath());
                         if (normalizedPath == null) {
                             changed = true;
                             continue;
                         }
-                        Path path = Paths.get(normalizedPath);
-                        if (isLegacyEyeCodeTestFixture(path) || !Files.exists(path)) {
+                        if (!isEligibleWorkspace(normalizedPath)) {
                             changed = true;
                             continue;
                         }
@@ -130,6 +181,8 @@ public class ProjectService {
                         changed = true;
                     }
                 }
+            } else {
+                changed = true;
             }
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Failed to load recent projects: " + e.getMessage());
@@ -157,6 +210,23 @@ public class ProjectService {
         if (path == null || path.isBlank()) {
             return null;
         }
-        return Paths.get(path).toAbsolutePath().normalize().toString();
+        try {
+            return Paths.get(path).toAbsolutePath().normalize().toString();
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    private boolean isEligibleWorkspace(String path) {
+        try {
+            Path candidate = Paths.get(path);
+            return Files.isDirectory(candidate) && !isLegacyEyeCodeTestFixture(candidate);
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
+    private record ProjectHistory(String lastOpenedWorkspace, List<ProjectInfo> recentProjects)
+            implements Serializable {
     }
 }

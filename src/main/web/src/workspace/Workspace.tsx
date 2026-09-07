@@ -13,9 +13,13 @@ import { BottomPanel } from './BottomPanel';
 import { EditorTabs } from './EditorTabs';
 import { EyeCodeIcon } from './EyeCodeIcon';
 import { MonacoHost } from './MonacoHost';
+import { NewProjectDialog } from './NewProjectDialog';
+import { NewJavaClassDialog } from './NewJavaClassDialog';
 import { ProjectExplorer } from './ProjectExplorer';
+import { LessonsDialog } from './LessonsDialog';
 import { StatusBar } from './StatusBar';
 import { TopToolbar } from './TopToolbar';
+import { WelcomeScreen } from './WelcomeScreen';
 import type { ProjectNode, RunState, TerminalState, WorkspaceSnapshot } from './protocol';
 
 type DocumentTab = Omit<DocumentSnapshot, 'content'>;
@@ -51,6 +55,9 @@ export function Workspace() {
   const [bottomPanel, setBottomPanel] = useState<BottomPanelId>('terminal');
   const [sidePanel, setSidePanel] = useState<SidePanelId>('project');
   const [caret, setCaret] = useState({ line: 1, column: 1 });
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [newJavaClassOpen, setNewJavaClassOpen] = useState(false);
+  const [lessonsOpen, setLessonsOpen] = useState(false);
 
   const updateDocument = useCallback((document: DocumentSnapshot) => {
     const tab: DocumentTab = { ...document };
@@ -123,6 +130,15 @@ export function Workspace() {
         setTreeChangedPath(undefined);
         setTreeRefreshRevision(0);
         service.clearDiagnostics();
+      }
+      if (event.channel === 'workspace' && event.name === 'reset') {
+        service.resetWorkspace();
+        setDocuments([]);
+        setActiveUri(null);
+        setCompletion(null);
+        setLearning(null);
+        setDiagnostics(null);
+        setMessage('');
       }
       if (event.channel === 'workspace' && event.name === 'treeChanged') {
         const parent = String((event.payload as { parent?: string }).parent ?? '');
@@ -221,9 +237,9 @@ export function Workspace() {
     catch (error) { setMessage(formatError(error)); }
   }
 
-  async function openProject() {
+  async function openProject(path?: string) {
     try {
-      const snapshot = await bridge.request<WorkspaceSnapshot>('workspace', 'openProject', {}, { timeoutMs: null });
+      const snapshot = await bridge.request<WorkspaceSnapshot>('workspace', 'openProject', path ? { path } : {}, { timeoutMs: null });
       if (snapshot.project) {
         setWorkspace(snapshot);
         childrenCache.current = {};
@@ -237,9 +253,37 @@ export function Workspace() {
     } catch (error) { setMessage(formatError(error)); }
   }
 
+  async function chooseProjectLocation(): Promise<string | undefined> {
+    const response = await bridge.request<{ path?: string; cancelled?: boolean }>('workspace', 'chooseDirectory', {}, { timeoutMs: null });
+    return response.path;
+  }
+
+  async function createProject(request: { name: string; location: string; groupId: string }) {
+    const snapshot = await bridge.request<WorkspaceSnapshot>('workspace', 'createProject', request, { timeoutMs: null });
+    if (snapshot.project) {
+      setWorkspace(snapshot);
+      childrenCache.current = {};
+      pendingChildren.current.clear();
+      setChildrenByPath({});
+      setTreeChangedPath(undefined);
+      setTreeRefreshRevision(0);
+      service.clearDiagnostics();
+      setNewProjectOpen(false);
+      setMessage('');
+    }
+  }
+
   async function newDocument() {
     try { await bridge.request('document', 'new', {}); setMessage(''); }
     catch (error) { setMessage(formatError(error)); }
+  }
+
+  async function createJavaClass(name: string) {
+    const root = workspace.project?.root.path;
+    if (!root) return;
+    const result = await operateProject('createJavaClass', root, name);
+    if (result.path && result.openFile) await openFile(result.path);
+    setNewJavaClassOpen(false);
   }
 
   async function openFile(path: string) {
@@ -318,12 +362,23 @@ export function Workspace() {
 
   const activeDocument = documents.find(document => document.uri === activeUri);
   const activeEditorDocument = activeDocument?.kind === 'documentation' ? undefined : activeDocument;
+  const toolbar = <TopToolbar projectName={workspace.project?.name} projectPath={workspace.project?.path} recentProjects={workspace.recentProjects} runState={runState}
+    onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()} onNewFile={() => void newDocument()}
+    onOpenRecentProject={path => void openProject(path)} onLessons={() => setLessonsOpen(true)} onRun={() => void run('run')} onRerun={() => void run('rerun')}
+    onStop={() => void run('stop')} onSelectConfiguration={id => void selectConfiguration(id)}
+    onOpenSearch={() => setSidePanel('search')} onOpenSettings={() => setSidePanel('settings')}
+    onWindowAction={action => void windowAction(action)} />;
+  if (!workspace.project) return <main className="app-shell">
+    {toolbar}
+    <WelcomeScreen recentProjects={workspace.recentProjects} onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()}
+      onOpenRecentProject={path => void openProject(path)} onLessons={() => setLessonsOpen(true)} />
+    <div className="overlay-root">
+      {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
+      {lessonsOpen && <LessonsDialog onClose={() => setLessonsOpen(false)} />}
+    </div>
+  </main>;
   return <main className="app-shell">
-    <TopToolbar projectName={workspace.project?.name} runState={runState} onOpenProject={() => void openProject()}
-      onNewFile={() => void newDocument()} onRun={() => void run('run')} onRerun={() => void run('rerun')}
-      onStop={() => void run('stop')} onSelectConfiguration={id => void selectConfiguration(id)}
-      onOpenSearch={() => setSidePanel('search')} onOpenSettings={() => setSidePanel('settings')}
-      onWindowAction={action => void windowAction(action)} />
+    {toolbar}
     <div className="shell-workspace">
       <nav className="activity-bar" aria-label="Workspace views">
         {(['project', 'search', 'learn', 'documentation', 'settings'] as SidePanelId[]).map(id => <button key={id}
@@ -343,8 +398,8 @@ export function Workspace() {
           <EditorTabs documents={documents} activeUri={activeUri} onActivate={uri => void activate(uri)} onClose={uri => void close(uri)} />
           <section className="editor-region">
             {!documents.length && <div className="workspace-empty"><div className="empty-mark">EC</div><strong>Start coding</strong>
-              <span>Open a project or create a new Java file.</span><div><button type="button" className="primary-action" onClick={() => void openProject()}>Open Project</button>
-              <button type="button" className="quiet-action" onClick={() => void newDocument()}>New File</button></div></div>}
+              <span>Open a file from Project panel or create something new.</span><div><button type="button" className="primary-action" onClick={() => setNewJavaClassOpen(true)}>New Java Class</button>
+              <button type="button" className="quiet-action" onClick={() => setLessonsOpen(true)}>Lessons</button></div></div>}
             <MonacoHost service={service} />
             <EditorDiagnosticStrip state={diagnostics} onNavigate={navigateProblem} />
           </section>
@@ -360,6 +415,9 @@ export function Workspace() {
       {completion && <CompletionPopup state={completion} onSelect={selectCompletion} onAccept={acceptCompletion} />}
       {learning && <LearningCard state={learning} onNavigate={identifier => service.navigateLearning(identifier)}
         onAction={action => service.openLearningAction(action)} onHover={hovered => service.setLearningHovered(hovered)} />}
+      {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
+      {newJavaClassOpen && <NewJavaClassDialog onCancel={() => setNewJavaClassOpen(false)} onCreate={createJavaClass} />}
+      {lessonsOpen && <LessonsDialog onClose={() => setLessonsOpen(false)} />}
     </div>
   </main>;
 }

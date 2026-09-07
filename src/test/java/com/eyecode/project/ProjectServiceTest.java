@@ -87,6 +87,18 @@ class ProjectServiceTest {
                 Path.of("C:/projects/eyecode-run-service-example")));
     }
 
+    @Test
+    void keepsRecentProjectsBoundedAfterRepeatedAdds() throws Exception {
+        ProjectService service = new ProjectService(tempDir.resolve("recent.dat"));
+
+        for (int index = 0; index < 11; index++) {
+            Path project = Files.createDirectory(tempDir.resolve("project-" + index));
+            service.addRecent(info(project));
+        }
+
+        assertEquals(10, service.getRecentProjects().size());
+    }
+
     private ProjectInfo info(Path path) {
         return new ProjectInfo("fixture", path.toString(), ProjectType.JAVA, 1L);
     }

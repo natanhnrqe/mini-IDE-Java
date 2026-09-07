@@ -14,11 +14,14 @@ import javafx.scene.layout.Region;
 
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class JavaFxWebShellSurface extends Region {
     private final WebShellAssetResolver assetResolver;
     private final WebShellProtocolCodec codec;
     private final WebShellDispatcher dispatcher;
+    private final List<Runnable> readyListeners = new CopyOnWriteArrayList<>();
     private CefClient client;
     private CefBrowser browser;
     private CefMessageRouter router;
@@ -57,6 +60,12 @@ public final class JavaFxWebShellSurface extends Region {
     public void registerHandler(String channel, String name, WebShellMessageHandler handler) {
         if (disposed) return;
         dispatcher.register(channel, name, handler);
+    }
+
+    public void addReadyListener(Runnable listener) {
+        if (listener != null && !disposed) {
+            readyListeners.add(listener);
+        }
     }
 
     public void send(WebShellEnvelope message) {
@@ -109,6 +118,12 @@ public final class JavaFxWebShellSurface extends Region {
     private void registerHandlers() {
         dispatcher.register("shell", "ping", message -> message.response(Map.of("message", "pong")));
         dispatcher.register("shell", "ready", message -> {
+            for (Runnable listener : readyListeners) {
+                try {
+                    listener.run();
+                } catch (RuntimeException ignored) {
+                }
+            }
             Map<String, Object> bootstrap = new LinkedHashMap<>();
             bootstrap.put("protocolVersion", WebShellEnvelope.PROTOCOL);
             bootstrap.put("platform", System.getProperty("os.name", "unknown"));

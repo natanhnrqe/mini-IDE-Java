@@ -5,6 +5,7 @@ import com.eyecode.project.model.ProjectModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class ProjectLifecycleService {
@@ -47,8 +48,12 @@ public final class ProjectLifecycleService {
 
     public void recordRecent(ProjectModel project) {
         if (project != null) {
-            projectService.addRecent(project.toInfo());
+            projectService.recordOpened(project.toInfo());
         }
+    }
+
+    public Optional<Path> lastOpenedWorkspace() {
+        return projectService.lastOpenedWorkspace();
     }
 
     public void close() {

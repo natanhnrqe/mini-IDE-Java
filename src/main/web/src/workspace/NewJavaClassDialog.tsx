@@ -1,0 +1,29 @@
+import { useState } from 'react';
+
+type Props = { onCancel(): void; onCreate(name: string): Promise<void> };
+
+export function NewJavaClassDialog({ onCancel, onCreate }: Props) {
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  async function submit() {
+    setCreating(true);
+    setError('');
+    try {
+      await onCreate(name);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      setCreating(false);
+    }
+  }
+
+  return <div className="new-project-backdrop" onPointerDown={() => { if (!creating) onCancel(); }}>
+    <form className="new-project-dialog" onPointerDown={event => event.stopPropagation()} onSubmit={event => { event.preventDefault(); void submit(); }}>
+      <header><strong>New Java Class</strong><span>Create a class in the project root</span></header>
+      <label>Class Name<input autoFocus value={name} onChange={event => setName(event.target.value)} placeholder="Main" disabled={creating} /></label>
+      {error && <p className="new-project-error" role="alert">{error}</p>}
+      <footer><button type="button" onClick={onCancel} disabled={creating}>Cancel</button><button type="submit" disabled={creating}>{creating ? 'Creating...' : 'Create Class'}</button></footer>
+    </form>
+  </div>;
+}

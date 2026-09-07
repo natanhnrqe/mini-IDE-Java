@@ -15,6 +15,7 @@ export function TerminalPanel({ state }: Props) {
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const connectedEndpoint = useRef('');
   const [endpoint, setEndpoint] = useState('');
 
   useEffect(() => {
@@ -83,6 +84,8 @@ export function TerminalPanel({ state }: Props) {
     if (!terminal || !endpoint) return;
 
     socketRef.current?.close();
+    if (connectedEndpoint.current && connectedEndpoint.current !== endpoint) terminal.reset();
+    connectedEndpoint.current = endpoint;
     const socket = new WebSocket(endpoint);
     socket.binaryType = 'arraybuffer';
     socketRef.current = socket;

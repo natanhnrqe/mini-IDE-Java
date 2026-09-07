@@ -12,6 +12,7 @@ import com.eyecode.language.documentation.JdkSourceTarget;
 import com.eyecode.learning.content.DocumentationTarget;
 import com.eyecode.project.ProjectLifecycleService;
 import com.eyecode.project.ProjectFileOperationService;
+import com.eyecode.project.MavenProjectCreationService;
 import com.eyecode.project.model.ProjectModel;
 import com.eyecode.runtime.RunConfiguration;
 import com.eyecode.runtime.RunService;
@@ -50,6 +51,7 @@ public final class WebShellWorkspaceController {
     private final RunService runService;
     private final TerminalService terminalService;
     private final ProjectFileOperationService fileOperations = new ProjectFileOperationService();
+    private final MavenProjectCreationService projectCreationService = new MavenProjectCreationService();
     private final JdkSourceLoader jdkSourceLoader = new JdkSourceLoader();
     private final JdkSourceDeclarationLocator jdkSourceDeclarationLocator = new JdkSourceDeclarationLocator();
     private final Map<String, WebJdkSourceDocument> jdkSourceDocuments = new LinkedHashMap<>();
@@ -61,6 +63,7 @@ public final class WebShellWorkspaceController {
     private final Set<String> reidentifyingSessions = new java.util.HashSet<>();
     private int nextUntitledNumber = 1;
     private boolean disposed;
+    private boolean restoreAttempted;
 
     public WebShellWorkspaceController(JavaFxWebShellSurface surface) {
         this(surface, target -> { }, null);
@@ -96,6 +99,7 @@ public final class WebShellWorkspaceController {
             sendTerminalState();
         };
         this.projectLifecycleService.addListener(terminalWorkspaceListener);
+        surface.addReadyListener(this::restoreLastWorkspace);
         this.terminalService.addListener(new TerminalService.Listener() {
             @Override public void onStarted(Path workingDirectory) { sendTerminalState(); }
             @Override public void onOutput(String text, boolean error) { }
@@ -124,6 +128,8 @@ public final class WebShellWorkspaceController {
         surface.registerHandler("document", "layout", this::documentationLayout);
         surface.registerHandler("workspace", "snapshot", this::workspaceSnapshot);
         surface.registerHandler("workspace", "openProject", this::openProject);
+        surface.registerHandler("workspace", "createProject", this::createProject);
+        surface.registerHandler("workspace", "chooseDirectory", this::chooseDirectory);
         surface.registerHandler("workspace", "refresh", this::refreshWorkspace);
         surface.registerHandler("workspace", "children", this::workspaceChildren);
         surface.registerHandler("workspace", "openFile", this::openWorkspaceFile);
@@ -170,6 +176,18 @@ public final class WebShellWorkspaceController {
         if (documentationHost != null) documentationHost.hide();
     }
 
+    private void restoreLastWorkspace() {
+        if (restoreAttempted || disposed) return;
+        restoreAttempted = true;
+        projectLifecycleService.lastOpenedWorkspace().ifPresent(root -> {
+            try {
+                openWorkspace(root);
+            } catch (IllegalArgumentException ignored) {
+                projectLifecycleService.removeRecent(root);
+            }
+        });
+    }
+
     private WebShellEnvelope open(WebShellEnvelope message) {
         String rawPath = text(message.payload(), "path");
         if (rawPath.isBlank()) rawPath = text(message.payload(), "uri");
@@ -198,24 +216,54 @@ public final class WebShellWorkspaceController {
 
     private WebShellEnvelope openProject(WebShellEnvelope message) {
         String rawPath = text(message.payload(), "path");
-        Path root = rawPath.isBlank() ? chooseProjectDirectory() : Path.of(rawPath);
+        Path root = rawPath.isBlank() ? chooseDirectory("Open Project") : Path.of(rawPath);
         if (root == null) return message.response(Map.of("cancelled", true));
         try {
-            runService.stop();
-            diagnosticsController.clear();
-            ProjectModel project = projectLifecycleService.open(root);
-            projectLifecycleService.recordRecent(project);
-            manager.closeAllSessions();
-            manager.watchProject(project.getRootDir());
-            runService.refreshConfigurations();
-            Map<String, Object> payload = workspacePayload();
-            preferredEntryPoint(project).ifPresent(path -> payload.put("reveal", revealPayload(project, path)));
-            surface.send(WebShellEnvelope.event("workspace", "changed", payload));
-            sendRunState();
-            return message.response(payload);
+            return message.response(openWorkspace(root));
         } catch (IllegalArgumentException exception) {
             return message.error(new WebShellError("INVALID_PROJECT", exception.getMessage(), true));
         }
+    }
+
+    private WebShellEnvelope createProject(WebShellEnvelope message) {
+        try {
+            MavenProjectCreationService.CreationResult created = projectCreationService.create(
+                    new MavenProjectCreationService.CreationRequest(
+                            text(message.payload(), "name"),
+                            text(message.payload(), "location"),
+                            text(message.payload(), "groupId")));
+            return message.response(openWorkspace(created.projectRoot()));
+        } catch (IllegalArgumentException exception) {
+            return message.error(new WebShellError("INVALID_PROJECT", exception.getMessage(), true));
+        } catch (IOException exception) {
+            return message.error(new WebShellError("PROJECT_CREATION_FAILED", safeMessage(exception), true));
+        }
+    }
+
+    private WebShellEnvelope chooseDirectory(WebShellEnvelope message) {
+        Path directory = chooseDirectory("Choose Project Location");
+        return message.response(directory == null ? Map.of("cancelled", true) : Map.of("path", directory.toString()));
+    }
+
+    private Map<String, Object> openWorkspace(Path root) {
+        runService.stop();
+        diagnosticsController.clear();
+        ProjectModel project = projectLifecycleService.open(root);
+        projectLifecycleService.recordRecent(project);
+        manager.closeAllSessions();
+        observedDocuments.clear();
+        untitledNames.clear();
+        jdkSourceDocuments.clear();
+        documentationDocuments.clear();
+        if (documentationHost != null) documentationHost.hide();
+        surface.send(WebShellEnvelope.event("workspace", "reset", Map.of()));
+        manager.watchProject(project.getRootDir());
+        runService.refreshConfigurations();
+        Map<String, Object> payload = workspacePayload();
+        preferredEntryPoint(project).ifPresent(path -> payload.put("reveal", revealPayload(project, path)));
+        surface.send(WebShellEnvelope.event("workspace", "changed", payload));
+        sendRunState();
+        return payload;
     }
 
     private WebShellEnvelope workspaceChildren(WebShellEnvelope message) {
@@ -919,13 +967,13 @@ public final class WebShellWorkspaceController {
         return !Set.of(".git", ".idea", ".gradle", ".eyecode", "target", "build", "out").contains(name);
     }
 
-    private Path chooseProjectDirectory() {
-        if (Platform.isFxApplicationThread()) return showProjectDialog();
+    private Path chooseDirectory(String title) {
+        if (Platform.isFxApplicationThread()) return showDirectoryDialog(title);
         CompletableFuture<Path> result = new CompletableFuture<>();
         try {
             Platform.runLater(() -> {
                 try {
-                    result.complete(showProjectDialog());
+                    result.complete(showDirectoryDialog(title));
                 } catch (RuntimeException exception) {
                     result.completeExceptionally(exception);
                 }
@@ -939,9 +987,9 @@ public final class WebShellWorkspaceController {
         }
     }
 
-    private Path showProjectDialog() {
+    private Path showDirectoryDialog(String title) {
         DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Open Project");
+        chooser.setTitle(title);
         Window owner = surface.getScene() == null ? null : surface.getScene().getWindow();
         File selected = chooser.showDialog(owner);
         return selected == null ? null : selected.toPath().toAbsolutePath().normalize();
@@ -1021,6 +1069,3 @@ public final class WebShellWorkspaceController {
         return result;
     }
 }
-
-
-

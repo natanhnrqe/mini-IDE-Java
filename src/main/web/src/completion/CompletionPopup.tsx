@@ -135,6 +135,34 @@ function signatureParameters(item: MonacoCompletionItem): Array<{
   });
 }
 
+function compactSignature(
+  item: MonacoCompletionItem,
+  maxParameters = 3
+): { name: string; suffix: string } {
+  const visualSignature = signature(item);
+  const open = visualSignature.suffix.indexOf('(');
+  const close = visualSignature.suffix.lastIndexOf(')');
+
+  if (open < 0 || close <= open) {
+    return visualSignature;
+  }
+
+  const parameters = splitParameters(
+    visualSignature.suffix.slice(open + 1, close)
+  );
+
+  if (parameters.length <= maxParameters) {
+    return visualSignature;
+  }
+
+  return {
+    name: visualSignature.name,
+    suffix: `${visualSignature.suffix.slice(0, open + 1)}${parameters
+      .slice(0, maxParameters)
+      .join(', ')}, …${visualSignature.suffix.slice(close)}`
+  };
+}
+
 function fallbackDetailSections(item: MonacoCompletionItem): CompletionDetailSection[] {
   const methodLike = item.kind === 'METHOD' || item.kind === 'CONSTRUCTOR';
 
@@ -155,7 +183,7 @@ function fallbackDetailSections(item: MonacoCompletionItem): CompletionDetailSec
     });
   }
 
-  if (item.kind === 'METHOD' && item.returnType && item.returnType !== 'void') {
+  if (item.kind === 'METHOD' && item.returnType) {
     sections.push({
       title: 'Returns',
       entries: [{
@@ -176,13 +204,18 @@ function fallbackDetailSections(item: MonacoCompletionItem): CompletionDetailSec
   return sections;
 }
 
+const MAX_VISIBLE_DETAIL_ENTRIES = 3;
+
 function DetailSection({ section }: { section: CompletionDetailSection }) {
+  const visibleEntries = section.entries.slice(0, MAX_VISIBLE_DETAIL_ENTRIES);
+  const hiddenEntries = section.entries.length - visibleEntries.length;
+
   return (
     <section className="completion-detail-section">
       <h4>{section.title}</h4>
 
       <div className="completion-detail-entries">
-        {section.entries.map((entry, index) => (
+        {visibleEntries.map((entry, index) => (
           <div
             key={`${section.title}-${entry.name}-${index}`}
             className="completion-detail-entry"
@@ -208,6 +241,10 @@ function DetailSection({ section }: { section: CompletionDetailSection }) {
           </div>
         ))}
       </div>
+
+      {hiddenEntries > 0 && (
+        <div className="completion-detail-more">+{hiddenEntries} more</div>
+      )}
     </section>
   );
 }
@@ -231,7 +268,7 @@ const CompletionRow = memo(function CompletionRow({
   onSelect,
   onAccept
 }: RowProps) {
-  const itemSignature = signature(item);
+  const itemSignature = compactSignature(item);
 
   return (
     <button

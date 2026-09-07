@@ -24,6 +24,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang")
                         .category("Class")
                         .documentation("Represents an immutable sequence of characters.")
+                        .example("String text = \"EyeCode\";\nint length = text.length();")
                         .build(),
 
                 CompletionItem.builder("Math", "Math", CompletionItemKind.CLASS)
@@ -312,6 +313,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.System")
                         .category("Method")
                         .documentation("Copies a subrange of array elements from one array to another.")
+                        .example("int[] source = {1, 2, 3};\nint[] target = new int[3];\nSystem.arraycopy(source, 0, target, 0, source.length);")
                         .build(),
 
                 CompletionItem.builder("getProperty", "getProperty", CompletionItemKind.METHOD)
@@ -395,6 +397,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.String")
                         .category("Method")
                         .documentation("Returns the character at the specified index in this string.")
+                        .example("String text = \"EyeCode\";\nchar first = text.charAt(0);")
                         .build(),
 
                 CompletionItem.builder("substring", "substring", CompletionItemKind.METHOD)
@@ -404,6 +407,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.String")
                         .category("Method")
                         .documentation("Returns a new string that is a substring of this string, starting at the given index.")
+                        .example("String text = \"EyeCode\";\nString part = text.substring(3);")
                         .build(),
 
                 CompletionItem.builder("indexOf", "indexOf", CompletionItemKind.METHOD)
@@ -431,6 +435,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.String")
                         .category("Method")
                         .documentation("Tests whether this string contains the given character sequence.")
+                        .example("boolean contains = \"EyeCode\".contains(\"Code\");")
                         .build(),
 
                 CompletionItem.builder("startsWith", "startsWith", CompletionItemKind.METHOD)
@@ -440,6 +445,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.String")
                         .category("Method")
                         .documentation("Tests if this string starts with the specified prefix.")
+                        .example("boolean starts = \"EyeCode\".startsWith(\"Eye\");")
                         .build(),
 
                 CompletionItem.builder("endsWith", "endsWith", CompletionItemKind.METHOD)
@@ -449,6 +455,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.String")
                         .category("Method")
                         .documentation("Tests if this string ends with the specified suffix.")
+                        .example("boolean ends = \"EyeCode\".endsWith(\"Code\");")
                         .build(),
 
                 CompletionItem.builder("equals", "equals", CompletionItemKind.METHOD)
@@ -512,6 +519,7 @@ public final class JavaLangSymbols {
                         .owner("java.lang.String")
                         .category("Method")
                         .documentation("Returns a new string with all occurrences of oldChar replaced by newChar.")
+                        .example("String result = \"EyeCode\".replace('E', 'A');")
                         .build(),
 
                 CompletionItem.builder("replaceAll", "replaceAll", CompletionItemKind.METHOD)

@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import type { RunState } from './protocol';
+import type { RecentProject, RunState } from './protocol';
 import { EyeCodeIcon } from './EyeCodeIcon';
 
 type Props = {
   projectName?: string;
+  projectPath?: string;
+  recentProjects: RecentProject[];
   runState: RunState;
+  onNewProject(): void;
   onOpenProject(): void;
   onNewFile(): void;
+  onOpenRecentProject(path: string): void;
+  onLessons(): void;
   onRun(): void;
   onRerun(): void;
   onStop(): void;
@@ -16,8 +21,10 @@ type Props = {
   onWindowAction(action: 'windowMinimize' | 'windowToggleMaximize' | 'windowClose'): void;
 };
 
-export function TopToolbar({ projectName, runState, onOpenProject, onNewFile, onRun, onRerun, onStop, onSelectConfiguration, onOpenSearch, onOpenSettings, onWindowAction }: Props) {
+export function TopToolbar({ projectName, projectPath, recentProjects, runState, onNewProject, onOpenProject, onNewFile, onOpenRecentProject, onLessons, onRun, onRerun, onStop, onSelectConfiguration, onOpenSearch, onOpenSettings, onWindowAction }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const otherRecentProjects = recentProjects.filter(project => project.path !== projectPath);
   return <header className="app-toolbar">
     <div className="toolbar-brand">
       <div className="toolbar-menu">
@@ -25,14 +32,31 @@ export function TopToolbar({ projectName, runState, onOpenProject, onNewFile, on
           <EyeCodeIcon name="hamburger" />
         </button>
         {menuOpen && <div className="toolbar-menu-popover">
+          <button type="button" onClick={() => { setMenuOpen(false); onNewProject(); }}>New Project</button>
           <button type="button" onClick={() => { setMenuOpen(false); onOpenProject(); }}>Open Project</button>
           <button type="button" onClick={() => { setMenuOpen(false); onNewFile(); }}>New Java File</button>
         </div>}
       </div>
       <span className="brand-sign">EC</span>
-      <button type="button" className="project-switcher" onClick={onOpenProject}>
-        <strong>{projectName || 'EyeCode Workspace'}</strong><span>⌄</span>
-      </button>
+      <div className="project-switcher-wrap">
+        <button type="button" className="project-switcher" onClick={() => setSwitcherOpen(value => !value)} aria-expanded={switcherOpen}>
+          <strong>{projectName || 'EyeCode Workspace'}</strong><span>⌄</span>
+        </button>
+        {switcherOpen && <div className="project-switcher-popover">
+          {projectName && <div className="project-switcher-current"><strong>{projectName}</strong><span className="project-switcher-path">{projectPath}</span></div>}
+          {otherRecentProjects.length > 0 && <div className="project-switcher-recent">
+            <span>Recent Projects</span>
+            {otherRecentProjects.map(project => <button key={project.path} type="button" onClick={() => { setSwitcherOpen(false); onOpenRecentProject(project.path); }}>
+              <strong>{project.name}</strong><small className="project-switcher-path">{project.path}</small>
+            </button>)}
+          </div>}
+          <div className="project-switcher-actions">
+            <button type="button" onClick={() => { setSwitcherOpen(false); onNewProject(); }}>New Project</button>
+            <button type="button" onClick={() => { setSwitcherOpen(false); onOpenProject(); }}>Open Project</button>
+            <button type="button" onClick={() => { setSwitcherOpen(false); onLessons(); }}>Lessons</button>
+          </div>
+        </div>}
+      </div>
     </div>
     <div className="toolbar-run-group">
       <select value={runState.selectedConfigurationId} onChange={event => onSelectConfiguration(event.target.value)}

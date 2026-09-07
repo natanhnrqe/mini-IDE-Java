@@ -120,4 +120,38 @@ class ProjectLifecycleServiceTest {
 
         assertEquals(1, service.recentProjects().size());
     }
+
+    @Test
+    void persistsAnExplicitLastWorkspaceIndependentlyOfRecentOrdering() throws Exception {
+        Path storage = tempDir.resolve("recent.dat");
+        Path firstProject = Files.createDirectory(tempDir.resolve("first"));
+        Path lastProject = Files.createDirectory(tempDir.resolve("last"));
+        ProjectLifecycleService first = new ProjectLifecycleService(new ProjectService(storage));
+
+        first.open(firstProject);
+        first.recordRecent(first.currentProject());
+        first.open(lastProject);
+        first.recordRecent(first.currentProject());
+
+        ProjectLifecycleService restored = new ProjectLifecycleService(new ProjectService(storage));
+
+        assertEquals(lastProject.toAbsolutePath().normalize(), restored.lastOpenedWorkspace().orElseThrow());
+        assertEquals(lastProject.toAbsolutePath().normalize(),
+                restored.open(restored.lastOpenedWorkspace().orElseThrow()).getRootDir());
+    }
+
+    @Test
+    void dropsAnInvalidLastWorkspaceDuringRestoreEligibilityCheck() throws Exception {
+        Path storage = tempDir.resolve("recent.dat");
+        Path project = Files.createDirectory(tempDir.resolve("deleted-after-close"));
+        ProjectLifecycleService first = new ProjectLifecycleService(new ProjectService(storage));
+        first.open(project);
+        first.recordRecent(first.currentProject());
+        Files.delete(project);
+
+        ProjectLifecycleService restored = new ProjectLifecycleService(new ProjectService(storage));
+
+        assertTrue(restored.lastOpenedWorkspace().isEmpty());
+        assertTrue(restored.recentProjects().isEmpty());
+    }
 }

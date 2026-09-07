@@ -387,6 +387,29 @@ html, body, #root {
   color: var(--eyecode-muted);
 }
 
+.project-switcher-wrap { position: relative; }
+.project-switcher-popover {
+  position: absolute;
+  z-index: 45;
+  top: calc(100% + 7px);
+  left: 0;
+  display: grid;
+  width: min(330px, calc(100vw - 30px));
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 8px;
+  background: #202126;
+  box-shadow: 0 14px 30px rgba(0,0,0,.34);
+}
+.project-switcher-current, .project-switcher-recent, .project-switcher-actions { display: grid; gap: 5px; padding: 10px; }
+.project-switcher-current { border-bottom: 1px solid rgba(255,255,255,.09); }
+.project-switcher-current strong, .project-switcher-recent > span { color: #e6e8ed; font: 600 12px var(--font-ui); }
+.project-switcher-path { display: block; min-width: 0; max-width: 100%; overflow: hidden; color: var(--text-muted); font: 11px var(--font-code); text-overflow: ellipsis; white-space: nowrap; }
+.project-switcher-recent { border-bottom: 1px solid rgba(255,255,255,.09); }
+.project-switcher-recent button, .project-switcher-actions button { display: grid; gap: 2px; width: 100%; padding: 7px; border: 0; border-radius: 5px; color: #dfe2e8; background: transparent; text-align: left; font: 12px var(--font-ui); }
+.project-switcher-recent button:hover, .project-switcher-actions button:hover { background: rgba(111,132,211,.16); }
+.project-switcher-actions { gap: 2px; }
+
 .app-toolbar select {
   width: min(140px, 24vw);
   height: 30px;
@@ -1013,6 +1036,46 @@ html, body, #root {
   pointer-events: auto;
 }
 
+.welcome-screen {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(300px, .7fr);
+  align-items: center;
+  gap: clamp(40px, 9vw, 130px);
+  min-height: 0;
+  flex: 1;
+  padding: clamp(42px, 10vh, 112px) clamp(30px, 10vw, 150px);
+  overflow: auto;
+  background: var(--background);
+
+}
+.welcome-intro { display: grid; justify-items: start; gap: 14px; max-width: 510px; }
+.welcome-mark { display: grid; width: 52px; height: 52px; place-items: center; border: 1px solid #7653ff; border-radius: 13px; color: #f2f0ff; background: linear-gradient(135deg, #4b2b97, #29206c); font: 700 23px/1 var(--font-code); letter-spacing: -.12em; }
+.welcome-product { display: grid; gap: 3px; }
+.welcome-product span { color: #cbd0dc; font: 600 14px var(--font-ui); }
+.welcome-product small { color: var(--text-muted); font: 11px var(--font-ui); }
+.welcome-intro > strong { color: #f1f2f5; font: 600 clamp(27px, 3.2vw, 42px)/1.12 var(--font-ui); letter-spacing: -.035em; }
+.welcome-intro p { max-width: 430px; margin: 0; color: var(--text-muted); font: 14px/1.6 var(--font-ui); }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
+.welcome-actions button, .workspace-empty button { min-height: 32px; padding: 0 12px; border-radius: 6px; font: 12px var(--font-ui); }
+.text-action { border: 0; color: #aebdf9; background: transparent; }
+.welcome-recents { min-width: 0; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: rgba(31,32,37,.8); box-shadow: 0 20px 45px rgba(0,0,0,.2); }
+.welcome-recents header { display: grid; gap: 4px; padding: 15px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.welcome-recents header strong { color: #e5e7ed; font: 600 14px var(--font-ui); }
+.welcome-recents header span, .welcome-recents > p { color: var(--text-muted); font: 11px var(--font-ui); }
+.welcome-recents > p { margin: 0; padding: 18px 16px; }
+.welcome-recents > div { display: grid; padding: 6px; }
+.welcome-recents button { display: grid; gap: 3px; min-width: 0; padding: 10px; border: 0; border-radius: 6px; color: #e4e6eb; background: transparent; text-align: left; }
+.welcome-recents button:hover { background: rgba(104,125,209,.15); }
+.welcome-recents button strong, .welcome-recents button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.welcome-recents button strong { font: 600 12px var(--font-ui); }
+.welcome-recents button span { color: var(--text-muted); font: 11px var(--font-code); }
+
+.lessons-backdrop { position: fixed; z-index: 53; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(0,0,0,.42); pointer-events: auto; }
+.lessons-dialog { display: grid; gap: 12px; width: min(360px, 100%); padding: 20px; border: 1px solid rgba(255,255,255,.14); border-radius: 9px; color: #e5e7ed; background: #25262c; box-shadow: 0 20px 48px rgba(0,0,0,.42); }
+.lessons-dialog strong { font: 600 15px var(--font-ui); }
+.lessons-dialog p { margin: 0; color: var(--text-muted); font: 12px/1.5 var(--font-ui); }
+.lessons-dialog button { justify-self: end; min-height: 30px; padding: 0 11px; border: 1px solid rgba(255,255,255,.15); border-radius: 5px; color: #dfe2e7; background: #303238; font: 12px var(--font-ui); }
+
 .editor-tab.is-active .editor-tab-label {
   color: #f0eff7;
   font-weight: 500;
@@ -1271,7 +1334,7 @@ html, body, #root {
   position: absolute;
   pointer-events: auto;
   display: grid;
-  width: min(1080px, calc(100vw - 16px));
+  width: min(780px, calc(100vw - 16px));
   max-height: min(760px, calc(100vh - 16px));
   overflow: hidden;
   border: 1px solid rgba(190,198,214,.28);
@@ -1283,7 +1346,7 @@ html, body, #root {
 }
 
 .completion-list {
-  max-height: min(390px, 45vh);
+  max-height: min(270px, 34vh);
   overflow-y: auto;
   padding: 0;
   scrollbar-color: #666b73 rgba(0,0,0,.18);
@@ -1314,7 +1377,7 @@ html, body, #root {
 
 .completion-row {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) minmax(110px, 180px) minmax(150px, 250px);
+  grid-template-columns: 26px minmax(0, 1fr) minmax(90px, 140px) minmax(130px, 210px);
   align-items: center;
   width: 100%;
   min-height: 30px;
@@ -1339,8 +1402,8 @@ html, body, #root {
 }
 
 .completion-row img {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   object-fit: contain;
 }
 
@@ -1510,6 +1573,12 @@ html, body, #root {
   color: #c7cad1;
 }
 
+.completion-detail-more {
+  margin-top: 2px;
+  color: #858b95;
+  font: 11px "Segoe UI", sans-serif;
+}
+
 .completion-example {
   margin-top: 18px;
   padding-top: 12px;
@@ -1521,7 +1590,6 @@ html, body, #root {
   margin-bottom: 8px;
   color: #84b7ff;
   font-size: 13px;
-}x;
 }
 
 .completion-example pre {
@@ -1644,6 +1712,45 @@ html, body, #root {
 .explorer-dialog > div { display: flex; justify-content: flex-end; gap: 7px; }
 .explorer-dialog button { height: 27px; padding: 0 11px; border: 1px solid rgba(255,255,255,.13); border-radius: 5px; color: #d9dce4; background: #2d2f35; font: 12px var(--font-ui); }
 .explorer-dialog button[type='submit'] { border-color: #7189d7; background: #4d64a9; color: #fff; }
+
+.new-project-backdrop {
+  position: fixed;
+  z-index: 52;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0,0,0,.42);
+  pointer-events: auto;
+}
+
+.new-project-dialog {
+  display: grid;
+  gap: 13px;
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: #20222a;
+  box-shadow: 0 20px 48px rgba(0,0,0,.54);
+  color: var(--text);
+  font: 12px var(--font-ui);
+}
+
+.new-project-dialog header { display: grid; gap: 4px; }
+.new-project-dialog header strong { font-size: 15px; }
+.new-project-dialog header span, .new-project-build { color: var(--text-muted); }
+.new-project-dialog label { display: grid; gap: 6px; color: #cdd0da; }
+.new-project-dialog input { width: 100%; height: 32px; padding: 0 9px; border: 1px solid rgba(255,255,255,.16); border-radius: 5px; outline: none; color: #e6e8ed; background: #17191f; font: 12px var(--font-ui); }
+.new-project-dialog input:focus { border-color: #7387cb; }
+.new-project-location { display: flex; gap: 7px; }
+.new-project-location input { min-width: 0; flex: 1; }
+.new-project-location button, .new-project-dialog footer button { height: 32px; padding: 0 11px; border: 1px solid rgba(255,255,255,.14); border-radius: 5px; color: #d9dce4; background: #2d2f35; font: 12px var(--font-ui); }
+.new-project-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 3px; }
+.new-project-dialog footer button[type='submit'] { border-color: #7189d7; color: #fff; background: #4d64a9; }
+.new-project-dialog button:disabled { opacity: .55; cursor: default; }
+.new-project-build, .new-project-error { margin: 0; }
+.new-project-error { color: #e8a3a3; line-height: 1.4; }
 
 /* ========================================================================== */
 /* Learning */

@@ -25,6 +25,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("Provides static methods for array manipulation: sorting, searching, copying, and conversion.")
+                        .example("int[] numbers = {3, 1, 2};\nArrays.sort(numbers);")
                         .build(),
 
                 CompletionItem.builder("Collections", "Collections", CompletionItemKind.CLASS)
@@ -32,6 +33,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("Provides static utility methods for collections: sorting, searching, synchronization, and immutability.")
+                        .example("List<String> names = new ArrayList<>(List.of(\"Bob\", \"Ana\"));\nCollections.sort(names);")
                         .build(),
 
                 CompletionItem.builder("List", "List", CompletionItemKind.INTERFACE)
@@ -39,6 +41,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Interface")
                         .documentation("An ordered collection allowing duplicates with positional access.")
+                        .example("List<String> names = new ArrayList<>();\nnames.add(\"Ana\");")
                         .build(),
 
                 CompletionItem.builder("ArrayList", "ArrayList", CompletionItemKind.CLASS)
@@ -54,6 +57,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("A doubly-linked list implementation of List and Deque, efficient for insertions and removals at both ends.")
+                        .example("LinkedList<String> queue = new LinkedList<>();\nqueue.add(\"first\");\nqueue.add(\"second\");")
                         .build(),
 
                 CompletionItem.builder("Vector", "Vector", CompletionItemKind.CLASS)
@@ -68,6 +72,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Interface")
                         .documentation("An object that maps keys to values. A map cannot contain duplicate keys.")
+                        .example("Map<String, Integer> ages = new HashMap<>();\nages.put(\"Ana\", 25);")
                         .build(),
 
                 CompletionItem.builder("HashMap", "HashMap", CompletionItemKind.CLASS)
@@ -90,6 +95,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("A Red-Black tree based NavigableMap implementation sorted by keys (natural order or Comparator).")
+                        .example("TreeMap<String, Integer> scores = new TreeMap<>();\nscores.put(\"Ana\", 90);")
                         .build(),
 
                 CompletionItem.builder("Set", "Set", CompletionItemKind.INTERFACE)
@@ -97,6 +103,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Interface")
                         .documentation("A collection that cannot contain duplicate elements.")
+                        .example("Set<String> tags = new HashSet<>();\ntags.add(\"java\");")
                         .build(),
 
                 CompletionItem.builder("HashSet", "HashSet", CompletionItemKind.CLASS)
@@ -104,6 +111,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("Hash-table based implementation of the Set interface.")
+                        .example("HashSet<String> tags = new HashSet<>();\ntags.add(\"java\");")
                         .build(),
 
                 CompletionItem.builder("LinkedHashSet", "LinkedHashSet", CompletionItemKind.CLASS)
@@ -118,6 +126,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("A NavigableSet implementation backed by a TreeMap, elements sorted by natural order or Comparator.")
+                        .example("TreeSet<Integer> numbers = new TreeSet<>();\nnumbers.add(3);")
                         .build(),
 
                 CompletionItem.builder("Queue", "Queue", CompletionItemKind.INTERFACE)
@@ -139,6 +148,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Class")
                         .documentation("An unbounded priority queue based on a priority heap, ordered by natural order or Comparator.")
+                        .example("PriorityQueue<Integer> queue = new PriorityQueue<>();\nqueue.add(3);")
                         .build(),
 
                 CompletionItem.builder("Stack", "Stack", CompletionItemKind.CLASS)
@@ -168,6 +178,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util")
                         .category("Interface")
                         .documentation("A comparison function for ordering objects, usable with Collections.sort().")
+                        .example("Comparator<String> byLength = Comparator.comparingInt(String::length);")
                         .build(),
 
                 CompletionItem.builder("Objects", "Objects", CompletionItemKind.CLASS)
@@ -201,6 +212,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.ArrayList")
                         .category("Method")
                         .documentation("Appends the specified element to the end of this list.")
+                        .example("List<String> names = new ArrayList<>();\nnames.add(\"EyeCode\");")
                         .build(),
 
                 CompletionItem.builder("get", "get", CompletionItemKind.METHOD)
@@ -210,6 +222,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.ArrayList")
                         .category("Method")
                         .documentation("Returns the element at the specified position in this list.")
+                        .example("List<String> names = new ArrayList<>(List.of(\"Ana\"));\nString name = names.get(0);")
                         .build(),
 
                 CompletionItem.builder("remove", "remove", CompletionItemKind.METHOD)
@@ -219,6 +232,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.ArrayList")
                         .category("Method")
                         .documentation("Removes the element at the specified position from this list.")
+                        .example("List<String> names = new ArrayList<>(List.of(\"A\", \"B\"));\nnames.remove(0);")
                         .build(),
 
                 CompletionItem.builder("size", "size", CompletionItemKind.METHOD)
@@ -237,6 +251,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.ArrayList")
                         .category("Method")
                         .documentation("Removes all elements from this list.")
+                        .example("List<String> names = new ArrayList<>(List.of(\"Ana\"));\nnames.clear();")
                         .build(),
 
                 CompletionItem.builder("contains", "contains", CompletionItemKind.METHOD)
@@ -301,6 +316,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.HashMap")
                         .category("Method")
                         .documentation("Associates the specified value with the specified key in the map.")
+                        .example("Map<String, Integer> ages = new HashMap<>();\nages.put(\"Ana\", 25);")
                         .build(),
 
                 CompletionItem.builder("get", "get", CompletionItemKind.METHOD)
@@ -310,6 +326,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.HashMap")
                         .category("Method")
                         .documentation("Returns the value mapped to the key, or null if no mapping exists.")
+                        .example("Map<String, Integer> ages = new HashMap<>();\nInteger age = ages.get(\"Ana\");")
                         .build(),
 
                 CompletionItem.builder("containsKey", "containsKey", CompletionItemKind.METHOD)
@@ -410,6 +427,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.Optional")
                         .category("Method")
                         .documentation("Returns an Optional describing the given non-null value, or throws NullPointerException if null.")
+                        .example("Optional<String> value = Optional.of(\"EyeCode\");")
                         .build(),
 
                 CompletionItem.builder("ofNullable", "ofNullable", CompletionItemKind.METHOD)
@@ -455,6 +473,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.Optional")
                         .category("Method")
                         .documentation("Performs the action with the value if present, otherwise does nothing.")
+                        .example("optional.ifPresent(value -> System.out.println(value));")
                         .build(),
 
                 CompletionItem.builder("orElse", "orElse", CompletionItemKind.METHOD)
@@ -464,6 +483,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.Optional")
                         .category("Method")
                         .documentation("Returns the value if present, otherwise returns other.")
+                        .example("String value = optional.orElse(\"default\");")
                         .build(),
 
                 CompletionItem.builder("orElseGet", "orElseGet", CompletionItemKind.METHOD)
@@ -519,6 +539,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.LinkedList")
                         .category("Method")
                         .documentation("Inserts the element at the front of this list.")
+                        .example("LinkedList<String> queue = new LinkedList<>();\nqueue.addFirst(\"first\");")
                         .build(),
 
                 CompletionItem.builder("addLast", "addLast", CompletionItemKind.METHOD)
@@ -555,6 +576,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.LinkedList")
                         .category("Method")
                         .documentation("Removes and returns the first element from this list.")
+                        .example("LinkedList<String> queue = new LinkedList<>(List.of(\"first\"));\nString first = queue.removeFirst();")
                         .build(),
 
                 CompletionItem.builder("removeLast", "removeLast", CompletionItemKind.METHOD)
@@ -711,6 +733,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.Collections")
                         .category("Method")
                         .documentation("Sorts the specified list into ascending natural order.")
+                        .example("List<String> names = new ArrayList<>(List.of(\"Bob\", \"Ana\"));\nCollections.sort(names);")
                         .build(),
 
                 CompletionItem.builder("binarySearch", "binarySearch", CompletionItemKind.METHOD)
@@ -866,6 +889,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.Arrays")
                         .category("Method")
                         .documentation("Sorts the specified array into ascending natural order.")
+                        .example("int[] numbers = {3, 1, 2};\nArrays.sort(numbers);")
                         .build(),
 
                 CompletionItem.builder("binarySearch", "binarySearch", CompletionItemKind.METHOD)
@@ -875,6 +899,7 @@ public final class JavaUtilSymbols {
                         .owner("java.util.Arrays")
                         .category("Method")
                         .documentation("Searches a sorted array for a key using binary search.")
+                        .example("int[] numbers = {1, 2, 3};\nint index = Arrays.binarySearch(numbers, 2);")
                         .build(),
 
                 CompletionItem.builder("fill", "fill", CompletionItemKind.METHOD)

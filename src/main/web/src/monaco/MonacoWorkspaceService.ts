@@ -297,6 +297,23 @@ export class MonacoWorkspaceService {
     this.publishDiagnosticsForActiveModel();
   }
 
+  resetWorkspace(): void {
+    this.hideCompletion();
+    this.hideLearning();
+    this.clearDiagnostics();
+    this.editor?.setModel(null);
+    this.models.forEach(model => model.dispose());
+    this.models.clear();
+    this.pending.clear();
+    this.viewStates.clear();
+    this.pendingReveals.clear();
+    this.confirmedVersions.clear();
+    this.readOnly.clear();
+    this.changeQueues.clear();
+    this.pendingCompletions.clear();
+    this.latestCompletionRequestId = null;
+  }
+
   reidentify(previousUri: string, document: DocumentSnapshot): void {
     if (this.completionState?.uri === previousUri) this.hideCompletion();
     if (this.learningState?.uri === previousUri) this.hideLearning();
