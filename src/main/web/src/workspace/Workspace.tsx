@@ -8,6 +8,11 @@ import type { DiagnosticsViewState, WebDiagnostic } from '../diagnostics/protoco
 import type { DocumentPayload, DocumentSnapshot } from '../document/protocol';
 import { LearningCard } from '../learning/LearningCard';
 import type { LearningPopupState } from '../learning/protocol';
+import { LearnWorkspace } from '../lessons/LearnWorkspace';
+import { LessonAnnotation } from '../lessons/LessonAnnotation';
+import { LessonEditorController } from '../lessons/LessonEditorController';
+import { LessonPanel } from '../lessons/LessonPanel';
+import type { LessonDescriptor, LessonSession } from '../lessons/protocol';
 import { MonacoWorkspaceService } from '../monaco/MonacoWorkspaceService';
 import { BottomPanel } from './BottomPanel';
 import { EditorTabs } from './EditorTabs';
@@ -16,7 +21,6 @@ import { MonacoHost } from './MonacoHost';
 import { NewProjectDialog } from './NewProjectDialog';
 import { NewJavaClassDialog } from './NewJavaClassDialog';
 import { ProjectExplorer } from './ProjectExplorer';
-import { LessonsPanel } from '../lessons/LessonsPanel';
 import { StatusBar } from './StatusBar';
 import { TopToolbar } from './TopToolbar';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -24,7 +28,8 @@ import type { ProjectNode, RunState, TerminalState, WorkspaceSnapshot } from './
 
 type DocumentTab = Omit<DocumentSnapshot, 'content'>;
 type BottomPanelId = 'run' | 'terminal' | 'output' | 'problems' | 'git';
-type SidePanelId = 'project' | 'search' | 'learn' | 'documentation' | 'settings';
+type SidePanelId = 'project' | 'search' | 'documentation' | 'settings';
+type AppMode = 'WELCOME' | 'PROJECT' | 'LEARN';
 type ExplorerOperation = 'createFile' | 'createDirectory' | 'createJavaClass' | 'createPackage' | 'rename' | 'delete' | 'duplicate';
 type ExplorerOperationResult = { path?: string; parent?: string; openFile?: boolean; ancestors?: string[] };
 
@@ -33,6 +38,7 @@ const emptyTerminalState: TerminalState = { requested: false, running: false, wo
 
 export function Workspace() {
   const service = useRef(new MonacoWorkspaceService()).current;
+  const lessonEditor = useRef(new LessonEditorController(service)).current;
   const selectCompletion = useRef((index: number) => service.selectCompletion(index)).current;
   const acceptCompletion = useRef(() => service.acceptSelectedCompletion()).current;
   const [documents, setDocuments] = useState<DocumentTab[]>([]);
@@ -57,7 +63,16 @@ export function Workspace() {
   const [caret, setCaret] = useState({ line: 1, column: 1 });
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [newJavaClassOpen, setNewJavaClassOpen] = useState(false);
-  const [welcomeLessonsOpen, setWelcomeLessonsOpen] = useState(false);
+  const [mode, setMode] = useState<AppMode>('WELCOME');
+  const [selectedLearnLesson, setSelectedLearnLesson] = useState<LessonDescriptor | null>(null);
+  const [selectedLearnRoadmapItemId, setSelectedLearnRoadmapItemId] = useState<string | null>(null);
+  const [learnPath, setLearnPath] = useState<string[]>(['Java', 'Fundamentos', 'Tipos Primitivos']);
+  const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
+  const lessonSessionRef = useRef<LessonSession | null>(null);
+  const lessonRequest = useRef(0);
+  const [lessonBusy, setLessonBusy] = useState(false);
+
+  useEffect(() => () => service.dispose(), [service]);
 
   const updateDocument = useCallback((document: DocumentSnapshot) => {
     const tab: DocumentTab = { ...document };
@@ -132,6 +147,13 @@ export function Workspace() {
         service.clearDiagnostics();
       }
       if (event.channel === 'workspace' && event.name === 'reset') {
+        const session = lessonSessionRef.current;
+        if (session) {
+          void bridge.request('lessons', 'session/close', { sessionId: session.sessionId });
+          lessonEditor.exit();
+          lessonSessionRef.current = null;
+          setLessonSession(null);
+        }
         service.resetWorkspace();
         setDocuments([]);
         setActiveUri(null);
@@ -139,6 +161,7 @@ export function Workspace() {
         setLearning(null);
         setDiagnostics(null);
         setMessage('');
+        setMode('WELCOME');
       }
       if (event.channel === 'workspace' && event.name === 'treeChanged') {
         const parent = String((event.payload as { parent?: string }).parent ?? '');
@@ -198,7 +221,7 @@ export function Workspace() {
     });
     bridge.emit('shell', 'ready', {});
     return unsubscribe;
-  }, [loadChildren, refreshWorkspace, service, updateDocument]);
+  }, [lessonEditor, loadChildren, refreshWorkspace, service, updateDocument]);
 
   useEffect(() => {
     const region = document.querySelector<HTMLElement>('.editor-region');
@@ -211,6 +234,7 @@ export function Workspace() {
         width: rect.width,
         height: rect.height,
       });
+      service.layout();
     };
     const observer = new ResizeObserver(reportLayout);
     observer.observe(region);
@@ -220,7 +244,7 @@ export function Workspace() {
       observer.disconnect();
       window.removeEventListener('resize', reportLayout);
     };
-  }, [activeUri, bottomPanel, sidePanel, documents.length]);
+  }, [activeUri, bottomPanel, sidePanel, documents.length, mode, service]);
 
   useEffect(() => {
     const initialFile = bootstrap?.initialFile;
@@ -248,6 +272,7 @@ export function Workspace() {
         setTreeChangedPath(undefined);
         setTreeRefreshRevision(0);
         service.clearDiagnostics();
+        setMode('PROJECT');
       }
       setMessage('');
     } catch (error) { setMessage(formatError(error)); }
@@ -268,6 +293,7 @@ export function Workspace() {
       setTreeChangedPath(undefined);
       setTreeRefreshRevision(0);
       service.clearDiagnostics();
+      setMode('PROJECT');
       setNewProjectOpen(false);
       setMessage('');
     }
@@ -361,65 +387,126 @@ export function Workspace() {
   }
 
   function openLessons() {
-    if (workspace.project) setSidePanel('learn');
-    else setWelcomeLessonsOpen(true);
+    if (mode !== 'LEARN') {
+      service.clearActiveModel();
+    }
+    setMode('LEARN');
   }
+
+  async function leaveProject() {
+    if (lessonSessionRef.current) await closeLesson();
+    service.clearActiveModel();
+    setMode('WELCOME');
+  }
+
+  function selectSidePanel(id: SidePanelId) {
+    if (lessonSession) void closeLesson();
+    setSidePanel(id);
+  }
+
+  async function startLesson(lesson: LessonDescriptor) {
+    const requestId = ++lessonRequest.current;
+    setLessonBusy(true);
+    try {
+      const session = await bridge.request<LessonSession>('lessons', 'session/start', { lessonId: lesson.id });
+      if (requestId !== lessonRequest.current) return;
+      lessonEditor.enter(session);
+      lessonSessionRef.current = session;
+      setLessonSession(session);
+      setMessage('');
+    } catch (error) { if (requestId === lessonRequest.current) setMessage(formatError(error)); }
+    finally { if (requestId === lessonRequest.current) setLessonBusy(false); }
+  }
+
+  async function changeLessonStep(action: 'next' | 'previous') {
+    const current = lessonSessionRef.current;
+    if (!current || lessonBusy) return;
+    const requestId = ++lessonRequest.current;
+    setLessonBusy(true);
+    try {
+      const session = await bridge.request<LessonSession>('lessons', `session/${action}`, { sessionId: current.sessionId });
+      if (requestId !== lessonRequest.current || lessonSessionRef.current?.sessionId !== session.sessionId) return;
+      lessonEditor.apply(session.commands);
+      lessonSessionRef.current = session;
+      setLessonSession(session);
+    } catch (error) { if (requestId === lessonRequest.current) setMessage(formatError(error)); }
+    finally { if (requestId === lessonRequest.current) setLessonBusy(false); }
+  }
+
+  async function closeLesson() {
+    const session = lessonSessionRef.current;
+    if (!session) return;
+    ++lessonRequest.current;
+    setLessonBusy(false);
+    try { await bridge.request('lessons', 'session/close', { sessionId: session.sessionId }); }
+    catch (error) { setMessage(formatError(error)); }
+    finally { lessonEditor.exit(); lessonSessionRef.current = null; setLessonSession(null); }
+  }
+
+  async function leaveLearn() {
+    await closeLesson();
+    setMode('WELCOME');
+  }
+
+  const selectLearnLesson = useCallback((lesson: LessonDescriptor | null, path: string[], roadmapItemId: string | null) => {
+    setSelectedLearnLesson(lesson);
+    setLearnPath(path);
+    setSelectedLearnRoadmapItemId(roadmapItemId);
+  }, []);
 
   const activeDocument = documents.find(document => document.uri === activeUri);
   const activeEditorDocument = activeDocument?.kind === 'documentation' ? undefined : activeDocument;
-  const toolbar = <TopToolbar projectName={workspace.project?.name} projectPath={workspace.project?.path} recentProjects={workspace.recentProjects} runState={runState}
+  const projectMode = mode === 'PROJECT';
+  const learnMode = mode === 'LEARN';
+  const toolbar = <TopToolbar projectName={projectMode ? workspace.project?.name : undefined} projectPath={projectMode ? workspace.project?.path : undefined} recentProjects={workspace.recentProjects} runState={runState}
     onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()} onNewFile={() => void newDocument()}
-    onOpenRecentProject={path => void openProject(path)} onLessons={openLessons} onRun={() => void run('run')} onRerun={() => void run('rerun')}
+    onOpenRecentProject={path => void openProject(path)} onWelcome={() => void leaveProject()} onRun={() => void run('run')} onRerun={() => void run('rerun')}
     onStop={() => void run('stop')} onSelectConfiguration={id => void selectConfiguration(id)}
     onOpenSearch={() => setSidePanel('search')} onOpenSettings={() => setSidePanel('settings')}
     onWindowAction={action => void windowAction(action)} />;
-  if (!workspace.project) return <main className="app-shell">
-    {toolbar}
-    {welcomeLessonsOpen ? <LessonsPanel onBackToWelcome={() => setWelcomeLessonsOpen(false)} /> : <WelcomeScreen recentProjects={workspace.recentProjects} onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()}
-      onOpenRecentProject={path => void openProject(path)} onLessons={openLessons} />}
-    <div className="overlay-root">
-      {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
-    </div>
-  </main>;
   return <main className="app-shell">
     {toolbar}
-    <div className="shell-workspace">
-      <nav className="activity-bar" aria-label="Workspace views">
-        {(['project', 'search', 'learn', 'documentation', 'settings'] as SidePanelId[]).map(id => <button key={id}
-          type="button" className={sidePanel === id ? 'is-active' : ''} onClick={() => setSidePanel(id)} aria-label={id}><EyeCodeIcon name={sideIcon(id)} /></button>)}
-      </nav>
+    <div className={`shell-workspace${mode === 'WELCOME' ? ' is-welcome' : ''}`} aria-hidden={mode === 'WELCOME'}>
+      {projectMode ? <nav className="activity-bar" aria-label="Workspace views">
+        {(['project', 'search', 'documentation', 'settings'] as SidePanelId[]).map(id => <button key={id}
+          type="button" className={sidePanel === id ? 'is-active' : ''} onClick={() => selectSidePanel(id)} aria-label={id}><EyeCodeIcon name={sideIcon(id)} /></button>)}
+      </nav> : <nav className="activity-bar learn-activity-bar" aria-hidden="true" />}
       <aside className="side-panel">
-        {sidePanel === 'project' ? <ProjectExplorer project={workspace.project} childrenByPath={childrenByPath}
+        {learnMode ? <LearnWorkspace selectedRoadmapItemId={selectedLearnRoadmapItemId} onLessonSelected={selectLearnLesson} /> : sidePanel === 'project' ? <ProjectExplorer project={workspace.project} childrenByPath={childrenByPath}
           reveal={workspace.reveal} treeChangedPath={treeChangedPath} treeRefreshRevision={treeRefreshRevision} onLoadChildren={loadChildren} onOpenFile={openFile}
           onRefresh={refreshProject} onOperation={operateProject} onOpenProject={() => void openProject()} onNewFile={() => void newDocument()} /> : <section className="auxiliary-panel">
           <header className="panel-heading"><span>{sideTitle(sidePanel)}</span></header>
           <div className="toolwindow-placeholder"><strong>{sideTitle(sidePanel)}</strong>
-            <span>{sidePanel === 'learn' ? 'Explore o catálogo de aprendizado Java na área principal.' : 'This shell view is composed and ready for its dedicated service integration.'}</span></div>
+            <span>This shell view is composed and ready for its dedicated service integration.</span></div>
         </section>}
       </aside>
       <section className="main-workspace">
-        <div className={`editor-stack${sidePanel === 'learn' ? ' is-hidden' : ''}`}>
-          <EditorTabs documents={documents} activeUri={activeUri} onActivate={uri => void activate(uri)} onClose={uri => void close(uri)} />
+        <div className="editor-stack">
+          {projectMode ? <EditorTabs documents={documents} activeUri={activeUri} onActivate={uri => void activate(uri)} onClose={uri => void close(uri)} /> : <header className="document-tabs learn-editor-tabs">{learnPath.join(' / ')}</header>}
           <section className="editor-region">
-            {!documents.length && <div className="workspace-empty"><div className="empty-mark">EC</div><strong>Start coding</strong>
-              <span>Open a file from Project panel or create something new.</span><div><button type="button" className="primary-action" onClick={() => setNewJavaClassOpen(true)}>New Java Class</button>
-              <button type="button" className="quiet-action" onClick={openLessons}>Aulas</button></div></div>}
+            {projectMode && !documents.length && <div className="workspace-empty"><div className="empty-mark">EC</div><strong>Start coding</strong>
+              <span>Open a file from Project panel or create something new.</span><div><button type="button" className="primary-action" onClick={() => setNewJavaClassOpen(true)}>New Java Class</button></div></div>}
+            {learnMode && !lessonSession && <div className="workspace-empty"><div className="empty-mark">EC</div><strong>{selectedLearnLesson?.title ?? 'Tipos Primitivos'}</strong><span>Inicie a aula para carregar o exemplo no editor.</span>{selectedLearnLesson?.executable && <button type="button" className="primary-action" onClick={() => startLesson(selectedLearnLesson)}>Iniciar aula</button>}</div>}
             <MonacoHost service={service} />
-            <EditorDiagnosticStrip state={diagnostics} onNavigate={navigateProblem} />
+            {projectMode && <EditorDiagnosticStrip state={diagnostics} onNavigate={navigateProblem} />}
           </section>
         </div>
-        <LessonsPanel active={sidePanel === 'learn'} />
       </section>
-      <BottomPanel active={bottomPanel} output={runOutput} terminalState={terminalState}
+      {projectMode ? <BottomPanel active={bottomPanel} output={runOutput} terminalState={terminalState}
         diagnostics={diagnostics} documents={documents} onSelect={selectBottomPanel}
-        onNavigateProblem={(uri, diagnostic) => void navigateProblem(uri, diagnostic)} />
+        onNavigateProblem={(uri, diagnostic) => void navigateProblem(uri, diagnostic)} /> : lessonSession ? <LessonPanel session={lessonSession} onPrevious={() => void changeLessonStep('previous')}
+          onNext={() => void changeLessonStep('next')} onExit={() => void leaveLearn()} busy={lessonBusy} /> : <section className="bottom-panel lesson-preview-panel"><header className="bottom-tabs"><strong>Aula</strong></header><div className="bottom-panel-content"><strong>{selectedLearnLesson?.title ?? 'Tipos Primitivos'}</strong><p>{selectedLearnLesson?.description ?? 'Selecione uma aula no roteiro para começar.'}</p></div></section>}
     </div>
-    <StatusBar activeUri={activeEditorDocument?.uri} displayName={activeEditorDocument?.displayName}
+    {projectMode ? <StatusBar activeUri={activeEditorDocument?.uri} displayName={activeEditorDocument?.displayName}
       projectRoot={workspace.project?.root.path} projectName={workspace.project?.name} caret={caret} message={message} />
+      : <div className="shell-status-spacer" />}
+    {mode === 'WELCOME' && <section className="welcome-mode"><WelcomeScreen recentProjects={workspace.recentProjects} onNewProject={() => setNewProjectOpen(true)} onOpenProject={() => void openProject()}
+      onOpenRecentProject={path => void openProject(path)} onLessons={openLessons} /></section>}
     <div className="overlay-root">
       {completion && <CompletionPopup state={completion} onSelect={selectCompletion} onAccept={acceptCompletion} />}
       {learning && <LearningCard state={learning} onNavigate={identifier => service.navigateLearning(identifier)}
         onAction={action => service.openLearningAction(action)} onHover={hovered => service.setLearningHovered(hovered)} />}
+      {learnMode && lessonSession && <LessonAnnotation service={service} lessonUri={lessonEditor.lessonUri()} annotation={lessonSession.annotation} />}
       {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
       {newJavaClassOpen && <NewJavaClassDialog onCancel={() => setNewJavaClassOpen(false)} onCreate={createJavaClass} />}
     </div>
@@ -427,11 +514,11 @@ export function Workspace() {
 }
 
 function sideIcon(id: SidePanelId): string {
-  return ({ project: 'project', search: 'search', learn: 'folders', documentation: 'markdown', settings: 'settings' })[id];
+  return ({ project: 'project', search: 'search', documentation: 'markdown', settings: 'settings' })[id];
 }
 
 function sideTitle(id: SidePanelId): string {
-  return ({ project: 'Project', search: 'Search', learn: 'Aulas', documentation: 'Documentation', settings: 'Settings' })[id];
+  return ({ project: 'Project', search: 'Search', documentation: 'Documentation', settings: 'Settings' })[id];
 }
 
 function formatError(error: unknown): string {

@@ -9,7 +9,6 @@ export function MonacoHost({ service }: Props) {
   useEffect(() => {
     if (!host.current) return;
     void service.mount(host.current);
-    return () => service.dispose();
   }, [service]);
 
   return <div ref={host} className="monaco-host" />;

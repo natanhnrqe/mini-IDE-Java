@@ -10,6 +10,7 @@ export type MonacoModel = {
   getWordUntilPosition: (position: { lineNumber: number; column: number }) => { startColumn: number; endColumn: number };
   getWordAtPosition: (position: { lineNumber: number; column: number }) => { word: string; startColumn: number; endColumn: number } | null;
   dispose: () => void;
+  deltaDecorations?: (oldDecorations: string[], newDecorations: Array<{ range: Record<string, number>; options: Record<string, unknown> }>) => string[];
 };
 
 export type MonacoMarker = {
@@ -38,10 +39,13 @@ export type MonacoEditor = {
   onKeyDown: (listener: (event: MonacoKeyEvent) => void) => Disposable;
   onMouseMove: (listener: (event: MonacoMouseEvent) => void) => Disposable;
   onMouseLeave: (listener: () => void) => Disposable;
+  onDidScrollChange: (listener: () => void) => Disposable;
+  layout: () => void;
   addCommand: (keybinding: number, handler: () => void) => string;
   getPosition: () => { lineNumber: number; column: number } | null;
   setPosition: (position: { lineNumber: number; column: number }) => void;
   revealPositionInCenterIfOutsideViewport: (position: { lineNumber: number; column: number }) => void;
+  revealRangeInCenterIfOutsideViewport: (range: Record<string, number>) => void;
   getScrolledVisiblePosition: (position: { lineNumber: number; column: number }) => { left: number; top: number; height: number } | null;
   getDomNode: () => HTMLElement | null;
   executeEdits: (source: string, edits: Array<{ range: Record<string, number>; text: string; forceMoveMarkers?: boolean }>) => void;

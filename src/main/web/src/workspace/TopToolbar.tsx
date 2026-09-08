@@ -11,7 +11,7 @@ type Props = {
   onOpenProject(): void;
   onNewFile(): void;
   onOpenRecentProject(path: string): void;
-  onLessons(): void;
+  onWelcome(): void;
   onRun(): void;
   onRerun(): void;
   onStop(): void;
@@ -21,7 +21,7 @@ type Props = {
   onWindowAction(action: 'windowMinimize' | 'windowToggleMaximize' | 'windowClose'): void;
 };
 
-export function TopToolbar({ projectName, projectPath, recentProjects, runState, onNewProject, onOpenProject, onNewFile, onOpenRecentProject, onLessons, onRun, onRerun, onStop, onSelectConfiguration, onOpenSearch, onOpenSettings, onWindowAction }: Props) {
+export function TopToolbar({ projectName, projectPath, recentProjects, runState, onNewProject, onOpenProject, onNewFile, onOpenRecentProject, onWelcome, onRun, onRerun, onStop, onSelectConfiguration, onOpenSearch, onOpenSettings, onWindowAction }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const otherRecentProjects = recentProjects.filter(project => project.path !== projectPath);
@@ -35,6 +35,7 @@ export function TopToolbar({ projectName, projectPath, recentProjects, runState,
           <button type="button" onClick={() => { setMenuOpen(false); onNewProject(); }}>New Project</button>
           <button type="button" onClick={() => { setMenuOpen(false); onOpenProject(); }}>Open Project</button>
           <button type="button" onClick={() => { setMenuOpen(false); onNewFile(); }}>New Java File</button>
+          {projectName && <button type="button" onClick={() => { setMenuOpen(false); onWelcome(); }}>Back to Welcome</button>}
         </div>}
       </div>
       <span className="brand-sign">EC</span>
@@ -53,7 +54,7 @@ export function TopToolbar({ projectName, projectPath, recentProjects, runState,
           <div className="project-switcher-actions">
             <button type="button" onClick={() => { setSwitcherOpen(false); onNewProject(); }}>New Project</button>
             <button type="button" onClick={() => { setSwitcherOpen(false); onOpenProject(); }}>Open Project</button>
-            <button type="button" onClick={() => { setSwitcherOpen(false); onLessons(); }}>Aulas</button>
+            {projectName && <button type="button" onClick={() => { setSwitcherOpen(false); onWelcome(); }}>Back to Welcome</button>}
           </div>
         </div>}
       </div>

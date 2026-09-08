@@ -64,7 +64,6 @@ public final class WebShellWorkspaceController {
     private final Set<String> reidentifyingSessions = new java.util.HashSet<>();
     private int nextUntitledNumber = 1;
     private boolean disposed;
-    private boolean restoreAttempted;
 
     public WebShellWorkspaceController(JavaFxWebShellSurface surface) {
         this(surface, target -> { }, null);
@@ -101,7 +100,6 @@ public final class WebShellWorkspaceController {
             sendTerminalState();
         };
         this.projectLifecycleService.addListener(terminalWorkspaceListener);
-        surface.addReadyListener(this::restoreLastWorkspace);
         this.terminalService.addListener(new TerminalService.Listener() {
             @Override public void onStarted(Path workingDirectory) { sendTerminalState(); }
             @Override public void onOutput(String text, boolean error) { }
@@ -163,6 +161,7 @@ public final class WebShellWorkspaceController {
     public void dispose() {
         if (disposed) return;
         disposed = true;
+        lessonsController.closeActiveSession();
         completionController.dispose();
         diagnosticsController.dispose();
         manager.closeAllSessions();
@@ -176,18 +175,6 @@ public final class WebShellWorkspaceController {
         jdkSourceDocuments.clear();
         documentationDocuments.clear();
         if (documentationHost != null) documentationHost.hide();
-    }
-
-    private void restoreLastWorkspace() {
-        if (restoreAttempted || disposed) return;
-        restoreAttempted = true;
-        projectLifecycleService.lastOpenedWorkspace().ifPresent(root -> {
-            try {
-                openWorkspace(root);
-            } catch (IllegalArgumentException ignored) {
-                projectLifecycleService.removeRecent(root);
-            }
-        });
     }
 
     private WebShellEnvelope open(WebShellEnvelope message) {

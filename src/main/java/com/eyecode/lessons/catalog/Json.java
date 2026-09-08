@@ -5,11 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-final class Json {
+public final class Json {
     private final String input;
     private int index;
     private Json(String input) { this.input = input == null ? "" : input; }
-    static Object parse(String input) { return new Json(input).value(); }
+    public static Object parse(String input) { return new Json(input).value(); }
     private Object value() { whitespace(); Object value = nested(); whitespace(); if (index != input.length()) throw error(); return value; }
     private Object nested() { whitespace(); if (index >= input.length()) throw error(); return switch (input.charAt(index)) {
         case '{' -> object(); case '[' -> array(); case '"' -> string(); case 't' -> literal("true", Boolean.TRUE);
