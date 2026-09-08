@@ -303,6 +303,7 @@ html, body, #root {
 .lesson-panel-actions button:disabled { cursor: default; opacity: .45; }
 .lesson-annotation { position: fixed; z-index: 41; display: grid; gap: 4px; width: min(230px, calc(100vw - 16px)); padding: 10px 12px; border: 1px solid var(--eyecode-border-strong); border-radius: var(--eyecode-radius-md); background: var(--eyecode-surface-elevated); box-shadow: 0 10px 24px rgba(0,0,0,.35); color: var(--eyecode-text-secondary); font: 12px/1.45 var(--eyecode-font-ui); pointer-events: none; }
 .lesson-annotation strong { color: var(--eyecode-accent-bright); font: 600 12px var(--eyecode-font-code); }
+.lesson-panel-content.learning-body pre code { font-size: 12px; }
 
 /* ========================================================================== */
 /* Topbar */

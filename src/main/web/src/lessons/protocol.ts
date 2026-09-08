@@ -24,13 +24,22 @@ export type LearningTopic = {
 export type LearningCategory = { id: string; title: string; description: string; topics: LearningTopic[] };
 export type LessonsCatalog = { categories: LearningCategory[] };
 export type LessonEditorRange = { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number };
-export type LessonEditorCommand = { type: 'SET_CODE' | 'HIGHLIGHT_RANGE' | 'REVEAL_RANGE' | 'CLEAR_HIGHLIGHTS'; code?: string; range?: LessonEditorRange };
+export type LessonEditorCommand = {
+  type: 'SET_CODE' | 'ANIMATE_EDIT' | 'HIGHLIGHT_RANGE' | 'REVEAL_RANGE' | 'CLEAR_HIGHLIGHTS';
+  code?: string;
+  replacementText?: string;
+  range?: LessonEditorRange;
+  finalCode?: string;
+  cadenceMillis?: number;
+};
 export type LessonContentBlock = { type: 'HEADING' | 'PARAGRAPH' | 'CODE' | 'LIST' | 'CALLOUT'; text?: string; title?: string; language?: string; code?: string; items?: string[] };
 export type LessonAnnotation = { title: string; message: string; range: LessonEditorRange };
 export type LessonSession = {
   sessionId: string;
   lessonId: string;
   currentStep: number;
+  currentPresentation: number;
+  presentationId: string;
   totalSteps: number;
   state: 'ACTIVE' | 'CLOSED';
   title: string;

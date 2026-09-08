@@ -129,17 +129,19 @@ public final class WebShellLessonsController {
         payload.put("lessonId", snapshot.lessonId());
         payload.put("currentStep", snapshot.currentStepIndex());
         payload.put("totalSteps", snapshot.totalSteps());
+        payload.put("currentPresentation", snapshot.currentPresentationIndex());
+        payload.put("presentationId", snapshot.presentation().id());
         payload.put("state", snapshot.state().name());
         payload.put("title", snapshot.step().title());
         payload.put("message", snapshot.step().message());
         payload.put("canPrevious", snapshot.canPrevious());
         payload.put("canNext", snapshot.canNext());
         payload.put("contentBlocks", snapshot.step().contentBlocks().stream().map(WebShellLessonsController::blockPayload).toList());
-        if (snapshot.step().annotation() != null) {
-            payload.put("annotation", Map.of("title", snapshot.step().annotation().title(),
-                    "message", snapshot.step().annotation().message(), "range", rangePayload(snapshot.step().annotation().range())));
+        if (snapshot.presentation().annotation() != null) {
+            payload.put("annotation", Map.of("title", snapshot.presentation().annotation().title(),
+                    "message", snapshot.presentation().annotation().message(), "range", rangePayload(snapshot.presentation().annotation().range())));
         }
-        payload.put("commands", snapshot.step().commands().stream().map(WebShellLessonsController::commandPayload).toList());
+        payload.put("commands", snapshot.presentation().commands().stream().map(WebShellLessonsController::commandPayload).toList());
         return payload;
     }
 
@@ -147,7 +149,10 @@ public final class WebShellLessonsController {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("type", command.type().name());
         if (command.code() != null) payload.put("code", command.code());
+        if (command.replacementText() != null) payload.put("replacementText", command.replacementText());
         if (command.range() != null) payload.put("range", rangePayload(command.range()));
+        if (command.finalCode() != null) payload.put("finalCode", command.finalCode());
+        if (command.cadenceMillis() != null) payload.put("cadenceMillis", command.cadenceMillis());
         return payload;
     }
 

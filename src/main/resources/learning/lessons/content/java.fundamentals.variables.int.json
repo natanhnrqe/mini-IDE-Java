@@ -3,12 +3,620 @@
   "version": 1,
   "title": "Tipos Primitivos",
   "steps": [
-    {"id":"intro","type":"DEMO","title":"Tipos primitivos","message":"Conheça os valores básicos que Java oferece sem precisar criar objetos.","contentBlocks":[{"type":"HEADING","text":"Tipos primitivos"},{"type":"PARAGRAPH","text":"Tipos primitivos representam valores simples diretamente na linguagem. Eles são a base para guardar números, caracteres e estados lógicos em um programa Java."},{"type":"LIST","items":["Inteiros: byte, short, int e long.","Decimais: float e double.","Texto de um caractere: char.","Verdadeiro ou falso: boolean."]},{"type":"CALLOUT","title":"Ideia principal","text":"Escolha o tipo pelo tipo de informação que você quer representar, não apenas pelo tamanho do número."}],"commands":[{"type":"SET_CODE","code":"public class Main {\n\n    public static void main(String[] args) {\n        byte smallNumber = 100;\n        short mediumNumber = 30_000;\n        int age = 20;\n        long population = 8_000_000_000L;\n\n        float temperature = 36.5F;\n        double price = 19.99;\n\n        char grade = 'A';\n        boolean active = true;\n    }\n}\n"},{"type":"CLEAR_HIGHLIGHTS"}]},
-    {"id":"integers","type":"DEMO","title":"Números inteiros","message":"byte, short, int e long guardam números sem casas decimais.","contentBlocks":[{"type":"HEADING","text":"Números inteiros"},{"type":"PARAGRAPH","text":"Java possui quatro tipos para números inteiros: byte, short, int e long. Todos representam valores sem casas decimais, mas suportam intervalos diferentes."},{"type":"HEADING","text":"int"},{"type":"PARAGRAPH","text":"Na maioria das situações, int é a escolha mais comum para guardar uma idade, pontuação, quantidade ou temperatura inteira."},{"type":"CODE","language":"java","code":"int age = 20;\nint score = 1500;\nint temperature = -5;"},{"type":"PARAGRAPH","text":"byte e short são úteis quando o intervalo menor faz sentido. Para números além do alcance de int, use long."},{"type":"CODE","language":"java","code":"byte smallNumber = 100;\nshort mediumNumber = 30_000;\nlong population = 8_000_000_000L;"},{"type":"CALLOUT","title":"long","text":"O sufixo L informa que o literal deve ser tratado como long."}],"annotation":{"title":"int","message":"Tipo inteiro mais usado no dia a dia em Java.","range":{"startLineNumber":6,"startColumn":9,"endLineNumber":6,"endColumn":12}},"commands":[{"type":"HIGHLIGHT_RANGE","range":{"startLineNumber":6,"startColumn":9,"endLineNumber":6,"endColumn":12}},{"type":"REVEAL_RANGE","range":{"startLineNumber":6,"startColumn":9,"endLineNumber":6,"endColumn":12}}]},
-    {"id":"decimals","type":"DEMO","title":"Números decimais","message":"float e double representam valores com casas decimais.","contentBlocks":[{"type":"HEADING","text":"Números decimais"},{"type":"PARAGRAPH","text":"Quando um valor pode ter casas decimais, usamos float ou double. double é a escolha mais comum porque oferece maior precisão."},{"type":"CODE","language":"java","code":"double price = 19.99;\ndouble average = 8.75;"},{"type":"PARAGRAPH","text":"float ocupa menos espaço, mas precisa do sufixo F no literal para deixar clara sua intenção."},{"type":"CODE","language":"java","code":"float temperature = 36.5F;"},{"type":"CALLOUT","title":"Cuidado","text":"Para dinheiro em sistemas reais, considere BigDecimal; float e double podem introduzir arredondamentos."}],"commands":[{"type":"HIGHLIGHT_RANGE","range":{"startLineNumber":9,"startColumn":9,"endLineNumber":9,"endColumn":14}},{"type":"REVEAL_RANGE","range":{"startLineNumber":9,"startColumn":9,"endLineNumber":9,"endColumn":14}}]},
-    {"id":"char","type":"DEMO","title":"char","message":"char guarda exatamente um caractere.","contentBlocks":[{"type":"HEADING","text":"char"},{"type":"PARAGRAPH","text":"char representa um único caractere, como uma letra, um número ou um símbolo. O valor é escrito entre aspas simples."},{"type":"CODE","language":"java","code":"char grade = 'A';\nchar initial = 'J';"},{"type":"PARAGRAPH","text":"Uma palavra ou frase não cabe em char. Para textos maiores, usamos String, que é um objeto e não um tipo primitivo."}],"commands":[{"type":"HIGHLIGHT_RANGE","range":{"startLineNumber":12,"startColumn":9,"endLineNumber":12,"endColumn":13}},{"type":"REVEAL_RANGE","range":{"startLineNumber":12,"startColumn":9,"endLineNumber":12,"endColumn":13}}]},
-    {"id":"boolean","type":"DEMO","title":"boolean","message":"boolean representa decisões com true ou false.","contentBlocks":[{"type":"HEADING","text":"boolean"},{"type":"PARAGRAPH","text":"boolean representa uma condição lógica. Seus únicos valores possíveis são true e false."},{"type":"CODE","language":"java","code":"boolean active = true;\nboolean hasPermission = false;"},{"type":"PARAGRAPH","text":"Esse tipo aparece em condições, como decisões com if, e ajuda o programa a escolher o próximo passo."},{"type":"CALLOUT","title":"Sem atalhos","text":"boolean não usa 0 ou 1 como verdadeiro ou falso em Java."}],"commands":[{"type":"HIGHLIGHT_RANGE","range":{"startLineNumber":13,"startColumn":9,"endLineNumber":13,"endColumn":16}},{"type":"REVEAL_RANGE","range":{"startLineNumber":13,"startColumn":9,"endLineNumber":13,"endColumn":16}}]},
-    {"id":"summary","type":"DEMO","title":"Resumo","message":"Use o tipo que expressa melhor o valor que seu programa precisa guardar.","contentBlocks":[{"type":"HEADING","text":"Resumo"},{"type":"PARAGRAPH","text":"Você viu os oito tipos primitivos de Java e o papel de cada grupo. int e double são escolhas comuns para números; char guarda um caractere; boolean expressa uma decisão."},{"type":"LIST","items":["Use byte e short quando um intervalo pequeno é realmente adequado.","Use long para inteiros muito grandes.","Use float ou double para valores decimais.","Use char para um caractere e boolean para uma condição."]},{"type":"CALLOUT","title":"Próximo passo","text":"Ao declarar uma variável, pense primeiro no significado do valor que ela guarda."}],"commands":[{"type":"CLEAR_HIGHLIGHTS"}]}
+    {
+      "id": "intro",
+      "type": "DEMO",
+      "title": "Tipos primitivos",
+      "message": "Conheça os valores básicos que Java oferece sem precisar criar objetos.",
+      "contentBlocks": [
+        {
+          "type": "HEADING",
+          "text": "Tipos primitivos"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "Tipos primitivos representam valores simples diretamente na linguagem. Eles são a base para guardar números, caracteres e estados lógicos em um programa Java."
+        },
+        {
+          "type": "LIST",
+          "items": [
+            "Inteiros: byte, short, int e long.",
+            "Decimais: float e double.",
+            "Texto de um caractere: char.",
+            "Verdadeiro ou falso: boolean."
+          ]
+        },
+        {
+          "type": "CALLOUT",
+          "title": "Ideia principal",
+          "text": "Escolha o tipo pelo significado da informação, não apenas pelo tamanho do número."
+        }
+      ],
+      "presentations": [
+        {
+          "id": "intro",
+          "commands": [
+            {
+              "type": "SET_CODE",
+              "code": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "integers",
+      "type": "DEMO",
+      "title": "Números inteiros",
+      "message": "byte, short, int e long guardam números sem casas decimais.",
+      "contentBlocks": [
+        {
+          "type": "HEADING",
+          "text": "Números inteiros"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "Java possui quatro tipos para números inteiros: byte, short, int e long. Todos representam valores sem casas decimais, mas suportam intervalos diferentes."
+        },
+        {
+          "type": "HEADING",
+          "text": "int e long"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "int é a escolha mais comum para idade, pontuação e quantidade. long atende valores que ultrapassam o intervalo de int."
+        },
+        {
+          "type": "CODE",
+          "language": "java",
+          "code": "\nint age = 20;\nlong population = 8_000_000_000L;"
+        },
+        {
+          "type": "CALLOUT",
+          "title": "long",
+          "text": "O sufixo L informa que o literal deve ser tratado como long."
+        }
+      ],
+      "presentations": [
+        {
+          "id": "int",
+          "commands": [
+            {
+              "type": "SET_CODE",
+              "code": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "\n        int age = 20;",
+              "range": {
+                "startLineNumber": 3,
+                "startColumn": 45,
+                "endLineNumber": 3,
+                "endColumn": 45
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n        int age = 20;\n    }\n}\n",
+              "cadenceMillis": 18
+            },
+            {
+              "type": "HIGHLIGHT_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 12
+              },
+              "finalCode": ""
+            },
+            {
+              "type": "REVEAL_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 12
+              },
+              "finalCode": ""
+            }
+          ],
+          "annotation": {
+            "title": "int",
+            "message": "Tipo inteiro mais usado no dia a dia em Java.",
+            "range": {
+              "startLineNumber": 4,
+              "startColumn": 9,
+              "endLineNumber": 4,
+              "endColumn": 12
+            }
+          }
+        },
+        {
+          "id": "long",
+          "commands": [
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 1,
+                "endLineNumber": 5,
+                "endColumn": 1
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "cadenceMillis": 8
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "\n        long population = 8_000_000_000L;",
+              "range": {
+                "startLineNumber": 3,
+                "startColumn": 45,
+                "endLineNumber": 3,
+                "endColumn": 45
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n        long population = 8_000_000_000L;\n    }\n}\n",
+              "cadenceMillis": 18
+            },
+            {
+              "type": "HIGHLIGHT_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 13
+              },
+              "finalCode": ""
+            },
+            {
+              "type": "REVEAL_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 13
+              },
+              "finalCode": ""
+            }
+          ],
+          "annotation": {
+            "title": "long",
+            "message": "Use long para inteiros grandes; o sufixo L identifica o literal.",
+            "range": {
+              "startLineNumber": 4,
+              "startColumn": 9,
+              "endLineNumber": 4,
+              "endColumn": 13
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "decimals",
+      "type": "DEMO",
+      "title": "Números decimais",
+      "message": "float e double representam valores com casas decimais.",
+      "contentBlocks": [
+        {
+          "type": "HEADING",
+          "text": "Números decimais"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "Quando um valor pode ter casas decimais, usamos float ou double. double é a escolha mais comum porque oferece maior precisão."
+        },
+        {
+          "type": "CODE",
+          "language": "java",
+          "code": "float temperature = 36.5F;\ndouble price = 19.99;"
+        },
+        {
+          "type": "CALLOUT",
+          "title": "float",
+          "text": "O sufixo F deixa claro que o literal deve ser tratado como float."
+        }
+      ],
+      "presentations": [
+        {
+          "id": "float",
+          "commands": [
+            {
+              "type": "SET_CODE",
+              "code": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "\n        float temperature = 36.5F;",
+              "range": {
+                "startLineNumber": 3,
+                "startColumn": 45,
+                "endLineNumber": 3,
+                "endColumn": 45
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n        float temperature = 36.5F;\n    }\n}\n",
+              "cadenceMillis": 18
+            },
+            {
+              "type": "HIGHLIGHT_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 14
+              },
+              "finalCode": ""
+            },
+            {
+              "type": "REVEAL_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 14
+              },
+              "finalCode": ""
+            }
+          ],
+          "annotation": {
+            "title": "float",
+            "message": "Use o sufixo F para indicar um literal float.",
+            "range": {
+              "startLineNumber": 4,
+              "startColumn": 9,
+              "endLineNumber": 4,
+              "endColumn": 14
+            }
+          }
+        },
+        {
+          "id": "double",
+          "commands": [
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 1,
+                "endLineNumber": 5,
+                "endColumn": 1
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "cadenceMillis": 8
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "\n        double price = 19.99;",
+              "range": {
+                "startLineNumber": 3,
+                "startColumn": 45,
+                "endLineNumber": 3,
+                "endColumn": 45
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n        double price = 19.99;\n    }\n}\n",
+              "cadenceMillis": 18
+            },
+            {
+              "type": "HIGHLIGHT_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 15
+              },
+              "finalCode": ""
+            },
+            {
+              "type": "REVEAL_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 15
+              },
+              "finalCode": ""
+            }
+          ],
+          "annotation": {
+            "title": "double",
+            "message": "double é a escolha comum para valores decimais.",
+            "range": {
+              "startLineNumber": 4,
+              "startColumn": 9,
+              "endLineNumber": 4,
+              "endColumn": 15
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "char",
+      "type": "DEMO",
+      "title": "char",
+      "message": "char guarda exatamente um caractere.",
+      "contentBlocks": [
+        {
+          "type": "HEADING",
+          "text": "char"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "char representa um único caractere, como uma letra, um número ou um símbolo. O valor é escrito entre aspas simples."
+        },
+        {
+          "type": "CODE",
+          "language": "java",
+          "code": "char grade = 'A';\nchar initial = 'J';"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "Uma palavra ou frase não cabe em char. Para textos maiores, usamos String, que é um objeto e não um tipo primitivo."
+        }
+      ],
+      "presentations": [
+        {
+          "id": "char",
+          "commands": [
+            {
+              "type": "SET_CODE",
+              "code": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "\n        char grade = 'A';",
+              "range": {
+                "startLineNumber": 3,
+                "startColumn": 45,
+                "endLineNumber": 3,
+                "endColumn": 45
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n        char grade = 'A';\n    }\n}\n",
+              "cadenceMillis": 18
+            },
+            {
+              "type": "HIGHLIGHT_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 13
+              },
+              "finalCode": ""
+            },
+            {
+              "type": "REVEAL_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 13
+              },
+              "finalCode": ""
+            }
+          ],
+          "annotation": {
+            "title": "char",
+            "message": "Guarda um único caractere entre aspas simples.",
+            "range": {
+              "startLineNumber": 4,
+              "startColumn": 9,
+              "endLineNumber": 4,
+              "endColumn": 13
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "boolean",
+      "type": "DEMO",
+      "title": "boolean",
+      "message": "boolean representa decisões com true ou false.",
+      "contentBlocks": [
+        {
+          "type": "HEADING",
+          "text": "boolean"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "boolean representa uma condição lógica. Seus únicos valores possíveis são true e false."
+        },
+        {
+          "type": "CODE",
+          "language": "java",
+          "code": "boolean active = true;"
+        },
+        {
+          "type": "CALLOUT",
+          "title": "Sem atalhos",
+          "text": "boolean não usa 0 ou 1 como verdadeiro ou falso em Java."
+        }
+      ],
+      "presentations": [
+        {
+          "id": "boolean",
+          "commands": [
+            {
+              "type": "SET_CODE",
+              "code": "public class Main {\n\n    public static void main(String[] args) {\n    }\n}\n",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "ANIMATE_EDIT",
+              "code": "",
+              "replacementText": "\n        boolean active = true;",
+              "range": {
+                "startLineNumber": 3,
+                "startColumn": 45,
+                "endLineNumber": 3,
+                "endColumn": 45
+              },
+              "finalCode": "public class Main {\n\n    public static void main(String[] args) {\n        boolean active = true;\n    }\n}\n",
+              "cadenceMillis": 18
+            },
+            {
+              "type": "HIGHLIGHT_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 16
+              },
+              "finalCode": ""
+            },
+            {
+              "type": "REVEAL_RANGE",
+              "code": "",
+              "replacementText": "",
+              "range": {
+                "startLineNumber": 4,
+                "startColumn": 9,
+                "endLineNumber": 4,
+                "endColumn": 16
+              },
+              "finalCode": ""
+            }
+          ],
+          "annotation": {
+            "title": "boolean",
+            "message": "Expressa uma condição que pode ser verdadeira ou falsa.",
+            "range": {
+              "startLineNumber": 4,
+              "startColumn": 9,
+              "endLineNumber": 4,
+              "endColumn": 16
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "type": "DEMO",
+      "title": "Resumo",
+      "message": "Use o tipo que expressa melhor o valor que seu programa precisa guardar.",
+      "contentBlocks": [
+        {
+          "type": "HEADING",
+          "text": "Resumo"
+        },
+        {
+          "type": "PARAGRAPH",
+          "text": "Você viu os oito tipos primitivos de Java e o papel de cada grupo. int e double são escolhas comuns para números; char guarda um caractere; boolean expressa uma decisão."
+        },
+        {
+          "type": "LIST",
+          "items": [
+            "Use byte e short quando um intervalo pequeno é realmente adequado.",
+            "Use long para inteiros muito grandes.",
+            "Use float ou double para valores decimais.",
+            "Use char para um caractere e boolean para uma condição."
+          ]
+        },
+        {
+          "type": "CALLOUT",
+          "title": "Próximo passo",
+          "text": "Ao declarar uma variável, pense primeiro no significado do valor que ela guarda."
+        }
+      ],
+      "presentations": [
+        {
+          "id": "summary",
+          "commands": [
+            {
+              "type": "SET_CODE",
+              "code": "public class Main {\n\n    public static void main(String[] args) {\n        byte smallNumber = 100;\n        short mediumNumber = 30_000;\n        int age = 20;\n        long population = 8_000_000_000L;\n        float temperature = 36.5F;\n        double price = 19.99;\n        char grade = 'A';\n        boolean active = true;\n    }\n}\n",
+              "replacementText": "",
+              "finalCode": ""
+            },
+            {
+              "type": "CLEAR_HIGHLIGHTS",
+              "code": "",
+              "replacementText": "",
+              "finalCode": ""
+            }
+          ]
+        }
+      ]
+    }
   ]
 }
-

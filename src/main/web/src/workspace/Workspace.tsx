@@ -68,11 +68,17 @@ export function Workspace() {
   const [selectedLearnRoadmapItemId, setSelectedLearnRoadmapItemId] = useState<string | null>(null);
   const [learnPath, setLearnPath] = useState<string[]>(['Java', 'Fundamentos', 'Tipos Primitivos']);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
+  const [lessonPresentationReady, setLessonPresentationReady] = useState(false);
   const lessonSessionRef = useRef<LessonSession | null>(null);
   const lessonRequest = useRef(0);
   const [lessonBusy, setLessonBusy] = useState(false);
 
   useEffect(() => () => service.dispose(), [service]);
+
+  useEffect(() => {
+    lessonEditor.setPresentationReadyHandler(setLessonPresentationReady);
+    return () => lessonEditor.setPresentationReadyHandler(null);
+  }, [lessonEditor]);
 
   const updateDocument = useCallback((document: DocumentSnapshot) => {
     const tab: DocumentTab = { ...document };
@@ -410,6 +416,7 @@ export function Workspace() {
     try {
       const session = await bridge.request<LessonSession>('lessons', 'session/start', { lessonId: lesson.id });
       if (requestId !== lessonRequest.current) return;
+      setLessonPresentationReady(false);
       lessonEditor.enter(session);
       lessonSessionRef.current = session;
       setLessonSession(session);
@@ -420,7 +427,8 @@ export function Workspace() {
 
   async function changeLessonStep(action: 'next' | 'previous') {
     const current = lessonSessionRef.current;
-    if (!current || lessonBusy) return;
+    if (!current) return;
+    lessonEditor.cancelAnimation();
     const requestId = ++lessonRequest.current;
     setLessonBusy(true);
     try {
@@ -435,6 +443,7 @@ export function Workspace() {
 
   async function closeLesson() {
     const session = lessonSessionRef.current;
+    lessonEditor.cancelAnimation();
     if (!session) return;
     ++lessonRequest.current;
     setLessonBusy(false);
@@ -495,7 +504,7 @@ export function Workspace() {
       {projectMode ? <BottomPanel active={bottomPanel} output={runOutput} terminalState={terminalState}
         diagnostics={diagnostics} documents={documents} onSelect={selectBottomPanel}
         onNavigateProblem={(uri, diagnostic) => void navigateProblem(uri, diagnostic)} /> : lessonSession ? <LessonPanel session={lessonSession} onPrevious={() => void changeLessonStep('previous')}
-          onNext={() => void changeLessonStep('next')} onExit={() => void leaveLearn()} busy={lessonBusy} /> : <section className="bottom-panel lesson-preview-panel"><header className="bottom-tabs"><strong>Aula</strong></header><div className="bottom-panel-content"><strong>{selectedLearnLesson?.title ?? 'Tipos Primitivos'}</strong><p>{selectedLearnLesson?.description ?? 'Selecione uma aula no roteiro para começar.'}</p></div></section>}
+        onNext={() => void changeLessonStep('next')} onExit={() => void leaveLearn()} /> : <section className="bottom-panel lesson-preview-panel"><header className="bottom-tabs"><strong>Aula</strong></header><div className="bottom-panel-content"><strong>{selectedLearnLesson?.title ?? 'Tipos Primitivos'}</strong><p>{selectedLearnLesson?.description ?? 'Selecione uma aula no roteiro para começar.'}</p></div></section>}
     </div>
     {projectMode ? <StatusBar activeUri={activeEditorDocument?.uri} displayName={activeEditorDocument?.displayName}
       projectRoot={workspace.project?.root.path} projectName={workspace.project?.name} caret={caret} message={message} />
@@ -506,7 +515,7 @@ export function Workspace() {
       {completion && <CompletionPopup state={completion} onSelect={selectCompletion} onAccept={acceptCompletion} />}
       {learning && <LearningCard state={learning} onNavigate={identifier => service.navigateLearning(identifier)}
         onAction={action => service.openLearningAction(action)} onHover={hovered => service.setLearningHovered(hovered)} />}
-      {learnMode && lessonSession && <LessonAnnotation service={service} lessonUri={lessonEditor.lessonUri()} annotation={lessonSession.annotation} />}
+      {learnMode && lessonSession && lessonPresentationReady && <LessonAnnotation service={service} lessonUri={lessonEditor.lessonUri()} annotation={lessonSession.annotation} />}
       {newProjectOpen && <NewProjectDialog onCancel={() => setNewProjectOpen(false)} onBrowse={chooseProjectLocation} onCreate={createProject} />}
       {newJavaClassOpen && <NewJavaClassDialog onCancel={() => setNewJavaClassOpen(false)} onCreate={createJavaClass} />}
     </div>

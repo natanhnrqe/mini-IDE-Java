@@ -40,14 +40,22 @@ class WebShellLessonsControllerTest {
 
     @Test void preservesSessionStepAndCommandsInTheBridgePayload() {
         var sessions = new LessonSessionService(new LessonContentService());
-        var snapshot = sessions.next(sessions.start("java.fundamentals.variables.int").sessionId());
+        var started = sessions.start("java.fundamentals.variables.int");
+        var snapshot = sessions.next(started.sessionId());
         Map<String, Object> payload = WebShellLessonsController.sessionPayload(snapshot);
         assertEquals(1, payload.get("currentStep"));
+        assertEquals(0, payload.get("currentPresentation"));
+        assertEquals("int", payload.get("presentationId"));
         assertEquals(6, payload.get("totalSteps"));
         assertEquals("HEADING", ((Map<?, ?>) ((List<?>) payload.get("contentBlocks")).getFirst()).get("type"));
         Map<?, ?> annotation = (Map<?, ?>) payload.get("annotation");
         assertEquals("int", annotation.get("title"));
-        assertEquals(6, ((Map<?, ?>) annotation.get("range")).get("startLineNumber"));
+        assertEquals(4, ((Map<?, ?>) annotation.get("range")).get("startLineNumber"));
+        Map<?, ?> animate = (Map<?, ?>) ((List<?>) payload.get("commands")).get(2);
+        assertEquals("ANIMATE_EDIT", animate.get("type"));
+        assertTrue(((String) animate.get("replacementText")).contains("int age = 20;"));
+        assertTrue(((String) animate.get("finalCode")).contains("int age = 20;"));
+        assertEquals(18, animate.get("cadenceMillis"));
     }
 
     @SuppressWarnings("unchecked")

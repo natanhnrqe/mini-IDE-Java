@@ -56,7 +56,11 @@ public final class LessonSessionService {
     private static LessonSessionSnapshot snapshot(LessonSession session) {
         int index = session.currentStepIndex();
         int total = session.content().steps().size();
-        return new LessonSessionSnapshot(session.sessionId(), session.content().id(), index, total,
-                session.state(), session.content().steps().get(index), index > 0, index < total - 1);
+        var step = session.content().steps().get(index);
+        int presentationIndex = session.currentPresentationIndex();
+        boolean canPrevious = index > 0 || presentationIndex > 0;
+        boolean canNext = index < total - 1 || presentationIndex < step.presentations().size() - 1;
+        return new LessonSessionSnapshot(session.sessionId(), session.content().id(), index, total, presentationIndex,
+                session.state(), step, step.presentations().get(presentationIndex), canPrevious, canNext);
     }
 }

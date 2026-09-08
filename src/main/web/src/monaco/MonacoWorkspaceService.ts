@@ -43,6 +43,7 @@ export class MonacoWorkspaceService {
   private mouseLeaveListener: Disposable | null = null;
   private scrollListener: Disposable | null = null;
   private readonly viewportListeners = new Set<() => void>();
+  private lessonTyping: { uri: string; frame: number; finalCode: string; resolve: (finished: boolean) => void } | null = null;
   private completionMessageUnsubscribe: (() => void) | null = null;
   private suppressContentChange = false;
   private disposed = false;
@@ -100,6 +101,7 @@ export class MonacoWorkspaceService {
   }
 
   clearActiveModel(): void {
+    this.cancelLessonTyping();
     this.hideCompletion();
     this.hideLearning();
     this.editor?.setModel(null);
@@ -151,6 +153,107 @@ export class MonacoWorkspaceService {
     try { model.setValue(content); } finally { this.suppressContentChange = false; }
   }
 
+  animateEphemeralEdit(uri: string, range: LessonEditorRange, replacementText: string, finalCode: string,
+                       cadenceMillis: number): Promise<boolean> {
+    this.cancelLessonTyping();
+    const model = this.ephemeralModels.get(uri);
+    if (!uri.startsWith('lesson://') || !model || this.activeModelUri() !== uri || !this.editor || !finalCode || cadenceMillis < 1) {
+      return Promise.resolve(false);
+    }
+    const startOffset = model.getOffsetAt({ lineNumber: range.startLineNumber, column: range.startColumn });
+    let remainingDeletion = model.getOffsetAt({ lineNumber: range.endLineNumber, column: range.endColumn }) - startOffset;
+    return new Promise(resolve => {
+      const startedAt = performance.now();
+      let progress = 0;
+      let written = 0;
+      const establishIndentation = (): boolean => {
+        let end = written;
+        while (replacementText.charAt(end) === ' ' || replacementText.charAt(end) === '\t') end++;
+        if (end === written) return true;
+        const position = model.getPositionAt(startOffset + written);
+        if (!this.applyLessonModelEdit(uri, model, {
+          range: { startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column },
+          text: replacementText.slice(written, end), forceMoveMarkers: true
+        })) return false;
+        written = end;
+        return true;
+      };
+      const write = (now: number) => {
+        const active = this.lessonTyping;
+        if (active?.uri !== uri || this.activeModelUri() !== uri || this.ephemeralModels.get(uri) !== model
+            || this.editor?.getModel() !== model || model.uri.toString() !== uri) {
+          this.lessonTyping = null;
+          resolve(false);
+          return;
+        }
+        const target = Math.floor((now - startedAt) / cadenceMillis) + 1;
+        const next = Math.min(progress + 1, target);
+        if (remainingDeletion > 0 && next > progress) {
+          const end = model.getPositionAt(startOffset + remainingDeletion);
+          const start = model.getPositionAt(startOffset + remainingDeletion - 1);
+          if (!this.applyLessonModelEdit(uri, model, { range: { startLineNumber: start.lineNumber, startColumn: start.column, endLineNumber: end.lineNumber, endColumn: end.column }, text: '', forceMoveMarkers: true })) {
+            this.lessonTyping = null;
+            resolve(false);
+            return;
+          }
+          remainingDeletion--;
+          progress = next;
+        } else {
+         if (next > progress && written < replacementText.length) {
+           const position = model.getPositionAt(startOffset + written);
+           const character = replacementText.charAt(written);
+
+           if (!this.applyLessonModelEdit(uri, model, {
+             range: {
+               startLineNumber: position.lineNumber,
+               startColumn: position.column,
+               endLineNumber: position.lineNumber,
+               endColumn: position.column
+             },
+             text: character,
+             forceMoveMarkers: true
+           })) {
+             this.lessonTyping = null;
+             resolve(false);
+             return;
+           }
+
+           written++;
+           progress = next;
+
+           if (character === '\n' && !establishIndentation()) {
+             this.lessonTyping = null;
+             resolve(false);
+             return;
+           }
+         }
+        }
+        if (remainingDeletion > 0 || written < replacementText.length) {
+          active.frame = requestAnimationFrame(write);
+          return;
+        }
+        if (model.getValue() !== finalCode) {
+          this.lessonTyping = null;
+          resolve(false);
+          return;
+        }
+        this.lessonTyping = null;
+        resolve(true);
+      };
+      this.lessonTyping = { uri, frame: 0, finalCode, resolve };
+      write(performance.now());
+    });
+  }
+
+  cancelLessonTyping(): void {
+    const active = this.lessonTyping;
+    if (!active) return;
+    cancelAnimationFrame(active.frame);
+    this.lessonTyping = null;
+    if (this.ephemeralModels.has(active.uri)) this.setEphemeralModelValue(active.uri, active.finalCode);
+    active.resolve(false);
+  }
+
   setEphemeralDecorations(uri: string, ranges: LessonEditorRange[]): void {
     const model = this.ephemeralModels.get(uri);
     if (!model?.deltaDecorations) return;
@@ -172,6 +275,7 @@ export class MonacoWorkspaceService {
   }
 
   disposeEphemeralModel(uri: string): void {
+    if (this.lessonTyping?.uri === uri) this.cancelLessonTyping();
     const model = this.ephemeralModels.get(uri);
     if (!model) return;
     this.clearEphemeralDecorations(uri);
@@ -346,6 +450,7 @@ export class MonacoWorkspaceService {
     if (!this.editor) return;
     const next = this.models.get(uri);
     if (!next) return;
+    this.cancelLessonTyping();
     this.hideCompletion();
     this.hideLearning();
     const current = this.editor.getModel();
@@ -396,6 +501,7 @@ export class MonacoWorkspaceService {
   }
 
   resetWorkspace(): void {
+    this.cancelLessonTyping();
     this.hideCompletion();
     this.hideLearning();
     this.clearDiagnostics();
@@ -438,6 +544,7 @@ export class MonacoWorkspaceService {
 
   dispose(): void {
     if (this.disposed) return;
+    this.cancelLessonTyping();
     this.disposed = true;
     this.contentListener?.dispose();
     this.contentListener = null;
@@ -1026,6 +1133,18 @@ export class MonacoWorkspaceService {
       if (candidate === model) return uri;
     }
     return null;
+  }
+
+  private applyLessonModelEdit(uri: string, model: MonacoModel,
+                               edit: { range: Record<string, number>; text: string; forceMoveMarkers?: boolean }): boolean {
+    if (this.editor?.getModel() !== model || model.uri.toString() !== uri) return false;
+    this.suppressContentChange = true;
+    try {
+      model.applyEdits([edit]);
+      return true;
+    } finally {
+      this.suppressContentChange = false;
+    }
   }
 }
 

@@ -41,14 +41,20 @@ public final class LessonContentService {
         LessonStepType type;
         try { type = LessonStepType.valueOf(required(object, "type")); }
         catch (IllegalArgumentException exception) { throw new IllegalArgumentException("Tipo de etapa inválido", exception); }
-        List<LessonEditorCommand> commands = new ArrayList<>();
-        for (Object value : array(object, "commands")) commands.add(command(object(value, "comando")));
+        List<LessonPresentation> presentations = new ArrayList<>();
+        for (Object value : array(object, "presentations")) presentations.add(presentation(object(value, "apresentação")));
         List<LessonContentBlock> contentBlocks = new ArrayList<>();
         if (object.get("contentBlocks") instanceof List<?> blocks) {
             for (Object value : blocks) contentBlocks.add(block(object(value, "bloco")));
         }
+        return new LessonStep(required(object, "id"), type, required(object, "title"), required(object, "message"), contentBlocks, presentations);
+    }
+
+    private static LessonPresentation presentation(Map<?, ?> object) {
+        List<LessonEditorCommand> commands = new ArrayList<>();
+        for (Object value : array(object, "commands")) commands.add(command(object(value, "comando")));
         LessonAnnotation annotation = object.get("annotation") == null ? null : annotation(object(object.get("annotation"), "anotação"));
-        return new LessonStep(required(object, "id"), type, required(object, "title"), required(object, "message"), contentBlocks, annotation, commands);
+        return new LessonPresentation(required(object, "id"), commands, annotation);
     }
 
     private static LessonContentBlock block(Map<?, ?> object) {
@@ -74,8 +80,11 @@ public final class LessonContentService {
         try { type = LessonEditorCommandType.valueOf(required(object, "type")); }
         catch (IllegalArgumentException exception) { throw new IllegalArgumentException("Tipo de comando inválido", exception); }
         String code = object.get("code") instanceof String value ? value : null;
+        String replacementText = object.get("replacementText") instanceof String value ? value : null;
         LessonEditorRange range = object.get("range") == null ? null : range(object(object.get("range"), "intervalo"));
-        return new LessonEditorCommand(type, code, range);
+        String finalCode = object.get("finalCode") instanceof String value ? value : null;
+        Integer cadenceMillis = object.get("cadenceMillis") instanceof Number value ? value.intValue() : null;
+        return new LessonEditorCommand(type, code, replacementText, range, finalCode, cadenceMillis);
     }
 
     private static LessonEditorRange range(Map<?, ?> object) {

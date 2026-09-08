@@ -21,26 +21,29 @@ export function highlightLearningJavaHtml(html: string): string {
   const template = document.createElement('template');
   template.innerHTML = html;
   for (const block of template.content.querySelectorAll<HTMLElement>('pre > code.language-java')) {
-    const source = block.textContent ?? '';
-    const fragment = document.createDocumentFragment();
-    let cursor = 0;
-    for (const match of source.matchAll(JAVA_TOKEN)) {
-      const index = match.index ?? cursor;
-      if (index > cursor) fragment.append(document.createTextNode(source.slice(cursor, index)));
-      const token = match[0];
-      const className = tokenClass(token);
-      if (className) {
-        const span = document.createElement('span');
-        span.className = className;
-        span.textContent = token;
-        fragment.append(span);
-      } else {
-        fragment.append(document.createTextNode(token));
-      }
-      cursor = index + token.length;
-    }
-    if (cursor < source.length) fragment.append(document.createTextNode(source.slice(cursor)));
-    block.replaceChildren(fragment);
+    block.innerHTML = highlightLearningJavaSource(block.textContent ?? '');
   }
   return template.innerHTML;
+}
+
+export function highlightLearningJavaSource(source: string): string {
+  const container = document.createElement('span');
+  let cursor = 0;
+  for (const match of source.matchAll(JAVA_TOKEN)) {
+    const index = match.index ?? cursor;
+    if (index > cursor) container.append(document.createTextNode(source.slice(cursor, index)));
+    const token = match[0];
+    const className = tokenClass(token);
+    if (className) {
+      const span = document.createElement('span');
+      span.className = className;
+      span.textContent = token;
+      container.append(span);
+    } else {
+      container.append(document.createTextNode(token));
+    }
+    cursor = index + token.length;
+  }
+  if (cursor < source.length) container.append(document.createTextNode(source.slice(cursor)));
+  return container.innerHTML;
 }

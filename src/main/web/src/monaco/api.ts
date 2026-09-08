@@ -4,11 +4,13 @@ export type MonacoModel = {
   uri: { toString: () => string };
   getValue: () => string;
   setValue: (value: string) => void;
+  applyEdits: (edits: Array<{ range: Record<string, number>; text: string; forceMoveMarkers?: boolean }>) => unknown;
   getAlternativeVersionId: () => number;
   getPositionAt: (offset: number) => { lineNumber: number; column: number };
   getOffsetAt: (position: { lineNumber: number; column: number }) => number;
   getWordUntilPosition: (position: { lineNumber: number; column: number }) => { startColumn: number; endColumn: number };
   getWordAtPosition: (position: { lineNumber: number; column: number }) => { word: string; startColumn: number; endColumn: number } | null;
+  onDidChangeContent?: (listener: (event: MonacoContentChangeEvent) => void) => Disposable;
   dispose: () => void;
   deltaDecorations?: (oldDecorations: string[], newDecorations: Array<{ range: Record<string, number>; options: Record<string, unknown> }>) => string[];
 };
@@ -23,7 +25,7 @@ export type MonacoMarker = {
   endColumn: number;
 };
 
-export type MonacoContentChangeEvent = { changes?: Array<{ text?: string; rangeLength?: number }> };
+export type MonacoContentChangeEvent = { changes?: Array<{ text?: string; rangeLength?: number; range?: { startLineNumber?: number; startColumn?: number; endLineNumber?: number; endColumn?: number } }> };
 export type MonacoKeyEvent = { keyCode: number; browserEvent?: KeyboardEvent; preventDefault?: () => void; stopPropagation?: () => void };
 export type MonacoCursorPositionEvent = { position?: { lineNumber: number; column: number } | null };
 export type MonacoMouseEvent = { target?: { position?: { lineNumber: number; column: number } | null; range?: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } | null } | null };
