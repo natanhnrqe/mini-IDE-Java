@@ -78,16 +78,17 @@ public final class WebShellCompletionController {
         if (disposed || !isLatest(modelId, message.requestId())) return;
         try {
             EditorSession session = sessionForModel(modelId);
-            if (session == null) {
+            boolean lessonPractice = isLessonPracticeRequest(message.payload(), modelId);
+            if (session == null && !lessonPractice) {
                 publish(message, responsePayload(message, modelId, List.of()));
                 return;
             }
             String content = text(message.payload(), "content");
-            if (content.isEmpty()) {
+            if (content.isEmpty() && !lessonPractice) {
                 content = manager.getBuffer(session.getSessionId())
                         .map(buffer -> buffer.getDocument().snapshot().getText()).orElse("");
             }
-            EditorDocument document = new EditorDocument(session.getFile(), content);
+            EditorDocument document = new EditorDocument(session == null ? null : session.getFile(), content);
             int offset = number(message.payload(), "offset", -1);
             if (offset < 0) {
                 int line = number(message.payload(), "line", 1);
@@ -190,6 +191,11 @@ public final class WebShellCompletionController {
             }
         }
         return null;
+    }
+
+    private static boolean isLessonPracticeRequest(Map<String, Object> payload, String uri) {
+        return uri.startsWith("lesson://") && Boolean.TRUE.equals(payload.get("lessonPractice"))
+                && payload.get("content") instanceof String;
     }
 
     private static String text(Map<String, Object> payload, String key) {

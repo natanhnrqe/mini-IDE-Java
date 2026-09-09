@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.HashSet;
 
 public record LessonStep(String id, LessonStepType type, String title, String message,
-                         List<LessonContentBlock> contentBlocks, List<LessonPresentation> presentations) {
+                         List<LessonContentBlock> contentBlocks, List<LessonPresentation> presentations, LessonPractice practice) {
     public LessonStep {
         if (id == null || id.isBlank() || type == null || title == null || title.isBlank()
                 || message == null || message.isBlank()) throw new IllegalArgumentException("Etapa de aula inválida");

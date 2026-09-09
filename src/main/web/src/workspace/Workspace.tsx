@@ -12,7 +12,7 @@ import { LearnWorkspace } from '../lessons/LearnWorkspace';
 import { LessonAnnotation } from '../lessons/LessonAnnotation';
 import { LessonEditorController } from '../lessons/LessonEditorController';
 import { LessonPanel } from '../lessons/LessonPanel';
-import type { LessonDescriptor, LessonSession } from '../lessons/protocol';
+import type { LessonDescriptor, LessonSession, LessonVerificationResponse, PracticeVerificationResult } from '../lessons/protocol';
 import { MonacoWorkspaceService } from '../monaco/MonacoWorkspaceService';
 import { BottomPanel } from './BottomPanel';
 import { EditorTabs } from './EditorTabs';
@@ -72,6 +72,8 @@ export function Workspace() {
   const lessonSessionRef = useRef<LessonSession | null>(null);
   const lessonRequest = useRef(0);
   const [lessonBusy, setLessonBusy] = useState(false);
+  const [practiceVerification, setPracticeVerification] = useState<PracticeVerificationResult | null>(null);
+  const [practiceVerifying, setPracticeVerifying] = useState(false);
 
   useEffect(() => () => service.dispose(), [service]);
 
@@ -412,6 +414,8 @@ export function Workspace() {
 
   async function startLesson(lesson: LessonDescriptor) {
     const requestId = ++lessonRequest.current;
+    setPracticeVerification(null);
+    setPracticeVerifying(false);
     setLessonBusy(true);
     try {
       const session = await bridge.request<LessonSession>('lessons', 'session/start', { lessonId: lesson.id });
@@ -429,21 +433,49 @@ export function Workspace() {
     const current = lessonSessionRef.current;
     if (!current) return;
     lessonEditor.cancelAnimation();
+    setPracticeVerification(null);
+    setPracticeVerifying(false);
     const requestId = ++lessonRequest.current;
     setLessonBusy(true);
     try {
       const session = await bridge.request<LessonSession>('lessons', `session/${action}`, { sessionId: current.sessionId });
       if (requestId !== lessonRequest.current || lessonSessionRef.current?.sessionId !== session.sessionId) return;
-      lessonEditor.apply(session.commands);
+      if (session.phase === 'PRACTICE') lessonEditor.enterPractice(session.practice!.starterCode);
+      else lessonEditor.apply(session.commands);
       lessonSessionRef.current = session;
       setLessonSession(session);
     } catch (error) { if (requestId === lessonRequest.current) setMessage(formatError(error)); }
     finally { if (requestId === lessonRequest.current) setLessonBusy(false); }
   }
 
+  async function verifyPractice() {
+    const current = lessonSessionRef.current;
+    const source = lessonEditor.practiceSource();
+    if (!current || current.phase !== 'PRACTICE' || !current.practice || source === null || practiceVerifying) return;
+    const requestId = ++lessonRequest.current;
+    const sessionId = current.sessionId;
+    const practiceId = current.practice.id;
+    setPracticeVerification(null);
+    setPracticeVerifying(true);
+    try {
+      const response = await bridge.request<LessonVerificationResponse>('lessons', 'session/verify', {
+        sessionId, practiceId, source
+      });
+      if (requestId !== lessonRequest.current || lessonSessionRef.current?.sessionId !== sessionId
+          || lessonEditor.practiceSource() !== source || response.session.sessionId !== sessionId
+          || response.session.phase !== 'PRACTICE' || response.session.practice?.id !== practiceId) return;
+      lessonSessionRef.current = response.session;
+      setLessonSession(response.session);
+      setPracticeVerification(response.verification);
+    } catch (error) { if (requestId === lessonRequest.current) setMessage(formatError(error)); }
+    finally { if (requestId === lessonRequest.current) setPracticeVerifying(false); }
+  }
+
   async function closeLesson() {
     const session = lessonSessionRef.current;
     lessonEditor.cancelAnimation();
+    setPracticeVerification(null);
+    setPracticeVerifying(false);
     if (!session) return;
     ++lessonRequest.current;
     setLessonBusy(false);
@@ -504,7 +536,7 @@ export function Workspace() {
       {projectMode ? <BottomPanel active={bottomPanel} output={runOutput} terminalState={terminalState}
         diagnostics={diagnostics} documents={documents} onSelect={selectBottomPanel}
         onNavigateProblem={(uri, diagnostic) => void navigateProblem(uri, diagnostic)} /> : lessonSession ? <LessonPanel session={lessonSession} onPrevious={() => void changeLessonStep('previous')}
-        onNext={() => void changeLessonStep('next')} onExit={() => void leaveLearn()} /> : <section className="bottom-panel lesson-preview-panel"><header className="bottom-tabs"><strong>Aula</strong></header><div className="bottom-panel-content"><strong>{selectedLearnLesson?.title ?? 'Tipos Primitivos'}</strong><p>{selectedLearnLesson?.description ?? 'Selecione uma aula no roteiro para começar.'}</p></div></section>}
+        onNext={() => void changeLessonStep('next')} onExit={() => void leaveLearn()} verification={practiceVerification} verifying={practiceVerifying} onVerify={() => void verifyPractice()} /> : <section className="bottom-panel lesson-preview-panel"><header className="bottom-tabs"><strong>Aula</strong></header><div className="bottom-panel-content"><strong>{selectedLearnLesson?.title ?? 'Tipos Primitivos'}</strong><p>{selectedLearnLesson?.description ?? 'Selecione uma aula no roteiro para começar.'}</p></div></section>}
     </div>
     {projectMode ? <StatusBar activeUri={activeEditorDocument?.uri} displayName={activeEditorDocument?.displayName}
       projectRoot={workspace.project?.root.path} projectName={workspace.project?.name} caret={caret} message={message} />

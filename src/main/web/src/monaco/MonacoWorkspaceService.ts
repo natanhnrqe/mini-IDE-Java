@@ -27,6 +27,7 @@ type PendingDiagnostics = { uri: string; model: MonacoModel; modelVersion: numbe
 export class MonacoWorkspaceService {
   private readonly models = new Map<string, MonacoModel>();
   private readonly ephemeralModels = new Map<string, MonacoModel>();
+  private readonly lessonPracticeUris = new Set<string>();
   private readonly ephemeralDecorations = new Map<string, string[]>();
   private readonly viewStates = new Map<string, unknown>();
   private readonly pendingReveals = new Map<string, { line: number; column: number }>();
@@ -152,6 +153,20 @@ export class MonacoWorkspaceService {
     this.suppressContentChange = true;
     try { model.setValue(content); } finally { this.suppressContentChange = false; }
   }
+
+  setEphemeralReadOnly(uri: string, readOnly: boolean): void {
+    const model = this.ephemeralModels.get(uri);
+    if (model && this.editor?.getModel() === model) this.editor.updateOptions({ readOnly });
+  }
+
+  setLessonPracticeIntelligence(uri: string, enabled: boolean): void {
+    if (enabled) this.lessonPracticeUris.add(uri);
+    else this.lessonPracticeUris.delete(uri);
+  }
+
+  focus(): void { this.editor?.focus(); }
+
+  ephemeralModelValue(uri: string): string | null { return this.ephemeralModels.get(uri)?.getValue() ?? null; }
 
   animateEphemeralEdit(uri: string, range: LessonEditorRange, replacementText: string, finalCode: string,
                        cadenceMillis: number): Promise<boolean> {
@@ -282,6 +297,7 @@ export class MonacoWorkspaceService {
     if (this.editor?.getModel() === model) this.editor.setModel(null);
     model.dispose();
     this.ephemeralModels.delete(uri);
+    this.lessonPracticeUris.delete(uri);
     this.ephemeralDecorations.delete(uri);
     this.publishDiagnosticsForActiveModel();
   }
@@ -594,6 +610,7 @@ export class MonacoWorkspaceService {
     if (this.suppressContentChange || !this.editor) return;
     const model = this.editor.getModel();
     if (!model) return;
+    if ([...this.ephemeralModels.values()].includes(model)) return;
     const uri = this.documentUri(model);
     if (!uri) return;
     const content = model.getValue();
@@ -750,7 +767,8 @@ export class MonacoWorkspaceService {
     const model = editor?.getModel();
     const position = editor?.getPosition();
     const uri = this.documentUri(model ?? null);
-    if (!editor || !model || !position || !uri || uri.startsWith('jdk://') || uri.startsWith('lesson://')) return;
+    const lessonPractice = uri ? this.lessonPracticeUris.has(uri) : false;
+    if (!editor || !model || !position || !uri || uri.startsWith('jdk://') || (uri.startsWith('lesson://') && !lessonPractice)) return;
     const word = model.getWordUntilPosition(position);
     const requestId = bridge.reserveRequestId();
     const modelVersion = model.getAlternativeVersionId();
@@ -768,6 +786,7 @@ export class MonacoWorkspaceService {
       offset: caretOffset,
       replaceStart: model.getOffsetAt({ lineNumber: position.lineNumber, column: word.startColumn }),
       replaceEnd: model.getOffsetAt({ lineNumber: position.lineNumber, column: word.endColumn }),
+      lessonPractice,
       content: model.getValue()
     };
     void bridge.request<{ accepted: boolean }>('completion', 'request', payload, { requestId })
@@ -858,7 +877,8 @@ export class MonacoWorkspaceService {
     const start = model.getOffsetAt({ lineNumber: position.lineNumber, column: startColumn });
     const end = model.getOffsetAt({ lineNumber: position.lineNumber, column: endColumn });
     const uri = this.documentUri(model);
-    if (!uri || uri.startsWith('lesson://')) return;
+    const lessonPractice = uri ? this.lessonPracticeUris.has(uri) : false;
+    if (!uri || (uri.startsWith('lesson://') && !lessonPractice)) return;
     const key = `${uri}:${model.getAlternativeVersionId()}:${position.lineNumber}:${startColumn}:${endColumn}`;
     if (key === this.hoverKey) return;
     this.hoverKey = key;
@@ -891,6 +911,7 @@ export class MonacoWorkspaceService {
       ...(target.startOffset === undefined ? {} : { startOffset: target.startOffset }),
       ...(target.endOffset === undefined ? {} : { endOffset: target.endOffset }),
       ...(identifier ? { identifier } : {}),
+      lessonPractice: this.lessonPracticeUris.has(target.uri),
       content: target.model.getValue()
     };
     void bridge.request<{ accepted: boolean }>('learning', 'request', payload, { requestId })

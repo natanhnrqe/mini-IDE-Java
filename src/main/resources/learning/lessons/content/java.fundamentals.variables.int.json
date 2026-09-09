@@ -221,7 +221,12 @@
             }
           }
         }
-      ]
+      ],
+      "practice": {
+        "id": "integer-score",
+        "instruction": "Crie uma variável `int` chamada `score` com valor `100` dentro do método `main`.",
+        "starterCode": "public class Main {\n\n    public static void main(String[] args) {\n\n    }\n}\n"
+      }
     },
     {
       "id": "decimals",

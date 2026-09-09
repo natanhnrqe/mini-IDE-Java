@@ -1,13 +1,14 @@
 import { highlightLearningJavaSource } from '../learning/highlightJava';
-import type { LessonContentBlock, LessonSession } from './protocol';
+import type { LessonContentBlock, LessonSession, PracticeVerificationResult } from './protocol';
 
-type Props = { session: LessonSession; onPrevious(): void; onNext(): void; onExit(): void };
+type Props = { session: LessonSession; verification: PracticeVerificationResult | null; verifying: boolean; onVerify(): void; onPrevious(): void; onNext(): void; onExit(): void };
 
-export function LessonPanel({ session, onPrevious, onNext, onExit }: Props) {
+export function LessonPanel({ session, verification, verifying, onVerify, onPrevious, onNext, onExit }: Props) {
+  const practice = session.phase === 'PRACTICE' ? session.practice : undefined;
   return <section className="bottom-panel lesson-panel" aria-label="Conteúdo da aula">
     <header className="bottom-tabs"><strong>Aula: {session.title}</strong><span>Parte {session.currentStep + 1} de {session.totalSteps}</span></header>
     <article className="bottom-panel-content lesson-panel-content learning-body">
-      {session.contentBlocks.map((block, index) => <LessonBlock key={index} block={block} />)}
+      {practice ? <><h2>Sua vez</h2><p>{practice.instruction}</p>{verification && <aside className="lesson-callout"><p>{verification.message}</p></aside>}<button type="button" className="primary-action" onClick={onVerify} disabled={verifying}>{verifying ? 'Verificando...' : 'Verificar'}</button></> : session.contentBlocks.map((block, index) => <LessonBlock key={index} block={block} />)}
     </article>
     <footer className="lesson-panel-actions"><button type="button" onClick={onExit}>Voltar ao início</button><div><button type="button" onClick={onPrevious} disabled={!session.canPrevious}>Anterior</button><button type="button" className="primary-action" onClick={onNext} disabled={!session.canNext}>Próximo</button></div></footer>
   </section>;

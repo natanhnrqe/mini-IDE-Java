@@ -13,6 +13,7 @@ import com.eyecode.lessons.content.LessonEditorCommand;
 import com.eyecode.lessons.content.LessonEditorRange;
 import com.eyecode.lessons.session.LessonSessionService;
 import com.eyecode.lessons.session.LessonSessionSnapshot;
+import com.eyecode.lessons.practice.PracticeValidator;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ public final class WebShellLessonsController {
     private final String catalogError;
     private final LessonContentService contentService;
     private final LessonSessionService sessionService;
+    private final PracticeValidator practiceValidator;
 
     public WebShellLessonsController(JavaFxWebShellSurface surface) {
         LearningCatalog loadedCatalog = null;
@@ -36,11 +38,13 @@ public final class WebShellLessonsController {
         catalogError = loadError;
         contentService = new LessonContentService();
         sessionService = new LessonSessionService(contentService);
+        practiceValidator = new PracticeValidator();
         surface.registerHandler("lessons", "catalog", this::catalog);
         surface.registerHandler("lessons", "session/start", this::start);
         surface.registerHandler("lessons", "session/next", this::next);
         surface.registerHandler("lessons", "session/previous", this::previous);
         surface.registerHandler("lessons", "session/close", this::close);
+        surface.registerHandler("lessons", "session/verify", this::verify);
     }
 
     public void closeActiveSession() {
@@ -123,6 +127,23 @@ public final class WebShellLessonsController {
         return request.response(sessionPayload(sessionService.close(text(request, "sessionId"))));
     }
 
+    private WebShellEnvelope verify(WebShellEnvelope request) {
+        try {
+            return request.response(verifyPayload(sessionService, practiceValidator, text(request, "sessionId"),
+                    text(request, "practiceId"), source(request)));
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            return request.error(new WebShellError("LESSON_PRACTICE_INVALID", exception.getMessage(), true));
+        }
+    }
+
+    static Map<String, Object> verifyPayload(LessonSessionService sessionService, PracticeValidator validator,
+                                             String sessionId, String practiceId, String source) {
+        var verification = sessionService.verifyPractice(sessionId, practiceId, source, validator);
+        return Map.of("verification", Map.of("status", verification.verification().status().name(),
+                        "message", verification.verification().message()),
+                "session", sessionPayload(verification.session()));
+    }
+
     static Map<String, Object> sessionPayload(LessonSessionSnapshot snapshot) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("sessionId", snapshot.sessionId());
@@ -132,6 +153,10 @@ public final class WebShellLessonsController {
         payload.put("currentPresentation", snapshot.currentPresentationIndex());
         payload.put("presentationId", snapshot.presentation().id());
         payload.put("state", snapshot.state().name());
+        payload.put("phase", snapshot.phase().name());
+        payload.put("practiceCompleted", snapshot.practiceCompleted());
+        if (snapshot.practice() != null) payload.put("practice", Map.of("id", snapshot.practice().id(),
+                "instruction", snapshot.practice().instruction(), "starterCode", snapshot.practice().starterCode()));
         payload.put("title", snapshot.step().title());
         payload.put("message", snapshot.step().message());
         payload.put("canPrevious", snapshot.canPrevious());
@@ -176,6 +201,12 @@ public final class WebShellLessonsController {
         Object value = request.payload().get(name);
         if (value instanceof String text && !text.isBlank()) return text;
         throw new IllegalArgumentException("Campo obrigatório ausente: " + name);
+    }
+
+    private static String source(WebShellEnvelope request) {
+        Object value = request.payload().get("source");
+        if (value instanceof String source) return source;
+        throw new IllegalArgumentException("Campo obrigatório ausente: source");
     }
 
     private static Map<String, Object> basePayload(String id, String title, String description) {

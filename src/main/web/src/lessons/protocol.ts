@@ -24,6 +24,9 @@ export type LearningTopic = {
 export type LearningCategory = { id: string; title: string; description: string; topics: LearningTopic[] };
 export type LessonsCatalog = { categories: LearningCategory[] };
 export type LessonEditorRange = { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number };
+export type LessonPractice = { id: string; instruction: string; starterCode: string };
+export type PracticeVerificationStatus = 'SUCCESS' | 'SYNTAX_ERROR' | 'INVALID_CONTEXT' | 'MISSING_DECLARATION' | 'WRONG_TYPE' | 'WRONG_NAME' | 'WRONG_INITIALIZER';
+export type PracticeVerificationResult = { status: PracticeVerificationStatus; message: string };
 export type LessonEditorCommand = {
   type: 'SET_CODE' | 'ANIMATE_EDIT' | 'HIGHLIGHT_RANGE' | 'REVEAL_RANGE' | 'CLEAR_HIGHLIGHTS';
   code?: string;
@@ -42,6 +45,9 @@ export type LessonSession = {
   presentationId: string;
   totalSteps: number;
   state: 'ACTIVE' | 'CLOSED';
+  phase: 'PRESENTATION' | 'PRACTICE' | 'COMPLETED';
+  practiceCompleted: boolean;
+  practice?: LessonPractice;
   title: string;
   message: string;
   contentBlocks: LessonContentBlock[];
@@ -50,3 +56,4 @@ export type LessonSession = {
   canNext: boolean;
   commands: LessonEditorCommand[];
 };
+export type LessonVerificationResponse = { verification: PracticeVerificationResult; session: LessonSession };

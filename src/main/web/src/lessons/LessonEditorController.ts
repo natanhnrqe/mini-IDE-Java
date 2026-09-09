@@ -11,6 +11,10 @@ export class LessonEditorController {
 
   lessonUri(): string | null { return this.activeUri; }
 
+  practiceSource(): string | null {
+    return this.activeUri ? this.service.ephemeralModelValue(this.activeUri) : null;
+  }
+
   setPresentationReadyHandler(handler: ((ready: boolean) => void) | null): void {
     this.presentationReadyHandler = handler;
   }
@@ -27,15 +31,28 @@ export class LessonEditorController {
     this.previousUri = this.service.activeModelUri();
     this.activeUri = uri;
     this.service.mountEphemeralModel(uri, '', 'java', true);
-    this.apply(session.commands);
+    if (session.phase === 'PRACTICE') this.enterPractice(session.practice!.starterCode);
+    else this.apply(session.commands);
   }
 
   apply(commands: LessonEditorCommand[]): void {
     if (!this.activeUri) return;
     this.cancelAnimation();
     const uri = this.activeUri;
+    this.service.setLessonPracticeIntelligence(uri, false);
+    this.service.setEphemeralReadOnly(uri, true);
     const generation = this.commandGeneration;
     void this.executeCommands(uri, commands, generation);
+  }
+
+  enterPractice(starterCode: string): void {
+    if (!this.activeUri) return;
+    this.cancelAnimation();
+    this.service.clearEphemeralDecorations(this.activeUri);
+    this.service.setEphemeralModelValue(this.activeUri, starterCode);
+    this.service.setEphemeralReadOnly(this.activeUri, false);
+    this.service.setLessonPracticeIntelligence(this.activeUri, true);
+    this.service.focus();
   }
 
   exit(): void {

@@ -47,7 +47,12 @@ public final class LessonContentService {
         if (object.get("contentBlocks") instanceof List<?> blocks) {
             for (Object value : blocks) contentBlocks.add(block(object(value, "bloco")));
         }
-        return new LessonStep(required(object, "id"), type, required(object, "title"), required(object, "message"), contentBlocks, presentations);
+        LessonPractice practice = object.get("practice") == null ? null : practice(object(object.get("practice"), "prática"));
+        return new LessonStep(required(object, "id"), type, required(object, "title"), required(object, "message"), contentBlocks, presentations, practice);
+    }
+
+    private static LessonPractice practice(Map<?, ?> object) {
+        return new LessonPractice(required(object, "id"), required(object, "instruction"), required(object, "starterCode"));
     }
 
     private static LessonPresentation presentation(Map<?, ?> object) {

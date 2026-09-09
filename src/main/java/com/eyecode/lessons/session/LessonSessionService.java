@@ -1,6 +1,8 @@
 package com.eyecode.lessons.session;
 
 import com.eyecode.lessons.content.LessonContentService;
+import com.eyecode.lessons.content.LessonPractice;
+import com.eyecode.lessons.practice.PracticeValidator;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,6 +35,26 @@ public final class LessonSessionService {
         session.previous();
         return snapshot(session);
     }
+    public synchronized LessonSessionSnapshot completePractice(String sessionId) {
+        LessonSession session = active(sessionId);
+        session.completePractice();
+        return snapshot(session);
+    }
+
+    public synchronized LessonPracticeVerification verifyPractice(String sessionId, String practiceId,
+                                                                  String source, PracticeValidator validator) {
+        LessonSession session = active(sessionId);
+        if (session.phase() != LessonSessionPhase.PRACTICE) {
+            throw new IllegalStateException("A prática não está ativa");
+        }
+        LessonPractice practice = session.content().steps().get(session.currentStepIndex()).practice();
+        if (practice == null || !practice.id().equals(practiceId)) {
+            throw new IllegalArgumentException("Prática de aula inválida");
+        }
+        var verification = validator.verify(practice, source);
+        if (verification.successful()) session.completePractice();
+        return new LessonPracticeVerification(snapshot(session), verification);
+    }
 
     public synchronized LessonSessionSnapshot close(String sessionId) {
         LessonSession session = sessions.get(sessionId);
@@ -58,9 +80,11 @@ public final class LessonSessionService {
         int total = session.content().steps().size();
         var step = session.content().steps().get(index);
         int presentationIndex = session.currentPresentationIndex();
-        boolean canPrevious = index > 0 || presentationIndex > 0;
-        boolean canNext = index < total - 1 || presentationIndex < step.presentations().size() - 1;
+        boolean canPrevious = index > 0 || presentationIndex > 0 || session.phase() != LessonSessionPhase.PRESENTATION;
+        boolean canNext = session.phase() == LessonSessionPhase.PRACTICE ? session.practiceCompleted()
+                : index < total - 1 || presentationIndex < step.presentations().size() - 1 || step.practice() != null;
         return new LessonSessionSnapshot(session.sessionId(), session.content().id(), index, total, presentationIndex,
-                session.state(), step, step.presentations().get(presentationIndex), canPrevious, canNext);
+                session.state(), step, step.presentations().get(presentationIndex), step.practice(), session.phase(),
+                session.practiceCompleted(), canPrevious, canNext);
     }
 }

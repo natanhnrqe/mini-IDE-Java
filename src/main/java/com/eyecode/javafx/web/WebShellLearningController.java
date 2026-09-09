@@ -67,9 +67,10 @@ public final class WebShellLearningController {
         try {
             String uri = text(message.payload(), "uri");
             EditorSession session = sessionFor(uri);
-            if (session == null) return publish(message, response(message, uri, false, Map.of()));
+            boolean lessonPractice = isLessonPracticeRequest(message.payload(), uri);
+            if (session == null && !lessonPractice) return publish(message, response(message, uri, false, Map.of()));
             String content = text(message.payload(), "content");
-            if (content.isEmpty()) {
+            if (content.isEmpty() && !lessonPractice) {
                 content = manager.getBuffer(session.getSessionId())
                         .map(buffer -> buffer.getDocument().snapshot().getText()).orElse("");
             }
@@ -132,7 +133,7 @@ public final class WebShellLearningController {
                                                  String content, int offset) {
         String identifier = text(request, "identifier");
         if (!identifier.isBlank()) return conceptForIdentifier(identifier);
-        EditorDocument document = new EditorDocument(session.getFile(), content);
+        EditorDocument document = new EditorDocument(session == null ? null : session.getFile(), content);
         Optional<SyntaxToken> token = syntaxAnalyzer.analyze(document).getTokens().stream()
                 .filter(candidate -> candidate.startOffset() <= offset && offset < candidate.endOffset())
                 .findFirst();
@@ -309,6 +310,11 @@ public final class WebShellLearningController {
     private EditorSession sessionFor(String uri) {
         return manager.getSessions().stream().filter(session -> MonacoModelId.forSession(session).equals(uri)
                 || MonacoModelId.matches(uri, session.getFile())).findFirst().orElse(null);
+    }
+
+    private static boolean isLessonPracticeRequest(Map<String, Object> payload, String uri) {
+        return uri.startsWith("lesson://") && Boolean.TRUE.equals(payload.get("lessonPractice"))
+                && payload.get("content") instanceof String;
     }
 
     private static String bodyHtml(String html) {
